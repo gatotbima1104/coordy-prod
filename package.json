@@ -6,13 +6,15 @@
   "scripts": {
     "start:dev": "nodemon --files src/server.ts",
     "build": "tsc",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed": "ts-node prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@faker-js/faker": "^9.9.0",
     "@prisma/client": "^6.17.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
