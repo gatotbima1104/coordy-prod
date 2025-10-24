@@ -2,8 +2,9 @@ import { PrismaClient } from "@prisma/client";
 import { config } from "dotenv";
 import { resolve } from "path";
 
-export const NODE_ENV = process.env.NODE_ENV || "development";
-const envFile = NODE_ENV === "development" ? ".env.local" : ".env";
+// export const NODE_ENV = process.env.NODE_ENV || "development";
+// const envFile = NODE_ENV === "development" ? ".env.local" : ".env";
+const envFile: string = ".env"
 
 config({ path: resolve(__dirname, `../${envFile}`), override: true });
 
