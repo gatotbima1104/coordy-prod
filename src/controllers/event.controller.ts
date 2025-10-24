@@ -87,7 +87,7 @@ export class EventController {
     async getEvents(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = req.user?.id;
-            const { name, year, month, day } = req.query;
+            const { name, year, month, day, status } = req.query;
 
             let dateFilter: any = {};
 
@@ -114,6 +114,15 @@ export class EventController {
                 filter.name = { contains: String(name), mode: 'insensitive' };
             }
 
+            if (status) {
+                const validStatuses = ["DRAFT", "WAITING_RESPONSE", "NEED_ACTION", "COMPLETED"];
+                const normalized = String(status).toUpperCase();
+                if (!validStatuses.includes(normalized)) {
+                    return res.status(400).json({ message: "Invalid status value." });
+                }
+                filter.status = normalized;
+            }
+
             const data = await prisma.event.findMany({
                 include: {
                     user: {
@@ -133,7 +142,8 @@ export class EventController {
                         }
                     }
                 },
-                where: filter
+                where: filter,
+                orderBy: { createdAt: "desc" },
             })
 
             res.status(200).send({
