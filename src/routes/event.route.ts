@@ -112,18 +112,72 @@ export const eventRouter = () => {
    * /event:
    *   get:
    *     summary: Get all events for the authenticated user
+   *     description: Retrieve all events created by the authenticated user. You can filter results by `name`, `status`, or specific date parts (`year`, `month`, `day`).
    *     tags: [Events]
    *     security:
    *       - bearerAuth: []
+   *     parameters:
+   *       - name: name
+   *         in: query
+   *         required: false
+   *         description: Filter events whose title contains this text (case-insensitive)
+   *         schema:
+   *           type: string
+   *           example: "meeting"
+   *       - name: status
+   *         in: query
+   *         required: false
+   *         description: Filter events by their status
+   *         schema:
+   *           type: string
+   *           enum: [DRAFT, WAITING_RESPONSE, NEED_ACTION, COMPLETED]
+   *           example: DRAFT
+   *       - name: year
+   *         in: query
+   *         required: false
+   *         description: Filter events created in a specific year
+   *         schema:
+   *           type: integer
+   *           example: 2025
+   *       - name: month
+   *         in: query
+   *         required: false
+   *         description: Filter events created in a specific month (1–12)
+   *         schema:
+   *           type: integer
+   *           example: 10
+   *       - name: day
+   *         in: query
+   *         required: false
+   *         description: Filter events created on a specific day of the month
+   *         schema:
+   *           type: integer
+   *           example: 21
    *     responses:
    *       200:
-   *         description: List of user events
+   *         description: Successfully retrieved list of user events
    *         content:
    *           application/json:
    *             schema:
-   *               type: array
-   *               items:
-   *                 $ref: '#/components/schemas/Event'
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: success
+   *                 data:
+   *                   type: array
+   *                   items:
+   *                     $ref: '#/components/schemas/Event'
+   *       400:
+   *         description: Invalid query parameter (e.g., invalid status)
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: Invalid status value.
    */
   router.get("/", verifyToken, eventController.getEvents);
 
