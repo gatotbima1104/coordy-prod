@@ -13,7 +13,8 @@ export class AiController {
 
     this.recommendIntersectionTimes =
       this.recommendIntersectionTimes.bind(this);
-    // this.updatedSchedule = this.updatedSchedule.bind(this);
+    this.getResponseContext =
+      this.getResponseContext.bind(this);
   }
 
   async recommendIntersectionTimes(
@@ -80,6 +81,85 @@ export class AiController {
         if (!Array.isArray(parsed)) parsed = [];
       } catch {
         parsed = [];
+      }
+
+      return res.status(200).json({
+        message: "success",
+        data: parsed,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getResponseContext(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { context } = req.body || {};
+
+      if (!context || typeof context !== "string") {
+        return res.status(400).json({
+          message: "context is required and must be a string.",
+        });
+      }
+
+      const response = await this.client.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          {
+            role: "system",
+            content: `
+                You are a multilingual natural-language interpreter specialized in scheduling.
+                Your task is to extract structured scheduling information from free-form text, 
+                even when expressed informally, partially, or in mixed languages (e.g., Indonesian + English).
+
+                Always return strictly valid JSON in this exact format:
+                {
+                  "intent": "confirm_availability" | "reject" | "reschedule" | "ask_clarification",
+                  "event": "User Interview",
+                  "date": "2025-10-18",
+                  "time": "08:00",
+                  "confidence": 0.9,
+                  "rawText": "<original input>"
+                }
+
+                ### Parsing Rules:
+                - Understand flexible date references such as:
+                  - "tanggal 18", "tgl 18", "besok", "lusa", "hari Senin", "next Monday", etc.
+                  - Normalize all dates to ISO format (YYYY-MM-DD) using **today's date as reference** (UTC+7 if unclear).
+                  - Make sure the year is not hallucinated, current year is 2025
+                - Understand flexible time references such as:
+                  - "jam 8", "08.00", "8 pagi", "20.30", "malam", "sore", "pagi", etc.
+                  - Convert to 24-hour "HH:MM" format.
+                - If no explicit date/time is present, set them to null.
+                - intent should reflect the user's purpose:
+                  - confirm_availability → agrees or confirms
+                  - reject → cannot or declines
+                  - reschedule → proposes new time
+                  - ask_clarification → asks question or unclear
+                - confidence is a float (0.0–1.0) showing extraction certainty.
+                - Never include explanations or text outside JSON.
+              `,
+          },
+          {
+            role: "user",
+            content: `Extract the context meaning from the following message:\n"${context}"`,
+          },
+        ],
+        temperature: 0.2,
+      });
+
+      // Parse GPT output safely
+      let parsed;
+      try {
+        parsed = JSON.parse(response.choices[0]?.message?.content || "{}");
+      } catch {
+        parsed = {
+          intent: "unknown",
+          date: null,
+          time: null,
+          confidence: 0.0,
+          rawText: context,
+        };
       }
 
       return res.status(200).json({
