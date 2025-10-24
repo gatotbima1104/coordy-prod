@@ -13,3 +13,5 @@ export const PORT = process.env.PORT || 8000;
 export const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || ""
 export const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || ""
 export const DOMAIN_NAME = process.env.DOMAIN_NAME || ""
+export const SUMOPOD_API_KEY = process.env.SUMOPOD_API_KEY || ""
+export const SUMOPOD_API_URL = process.env.SUMOPOD_API_URL || ""
