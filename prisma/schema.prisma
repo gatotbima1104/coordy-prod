@@ -18,10 +18,10 @@ enum StatusVote {
 }
 
 enum StatusCard {
-    DRAFT
-    WAITING_RESPONSE
-    NEED_ACTION
-    COMPLETED
+    // DRAFT
+    WAITING_RESPONSE // pertama kali dibuat
+    NEED_ACTION // kalo udah masuk semua stakeholder
+    COMPLETED // kalo udah schedule dan pick waktu interesection
 }
 
 enum StatusNotification {
@@ -80,7 +80,7 @@ model Event {
     title         String?        @unique
     notes         String?
     date          DateTime       @default(now())
-    status        StatusCard     @default(DRAFT)
+    status        StatusCard     @default(WAITING_RESPONSE)
     estimatedTime Duration       @default(HALF)
     priority      PriorityStatus @default(LOW)
     timezone      TimeZone       @default(UTC)
