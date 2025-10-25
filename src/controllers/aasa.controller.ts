@@ -6,10 +6,10 @@ export class AasaController{
             
             const aasa = {
                 applinks: {
-                    apps: ["mario-pan.Coordiy"],
+                    apps: ["com.mario-panApp.Coordiy"],
                 },
                 appclips: {
-                    apps: ["mario-pan.Coordiy.Clip"]
+                    apps: ["com.mario-panApp.Coordiy.Coordiy"]
                 }
             }
 
