@@ -39,7 +39,9 @@ enum TypeNotification {
 }
 
 enum Duration {
+    QUARTER
     HALF
+    THREE_QUARTER
     HOUR
 }
 
