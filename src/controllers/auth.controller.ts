@@ -7,7 +7,7 @@ export class AuthContoller {
     async signInWithApple(req: Request, res: Response, next: NextFunction) {
         try {
             
-            const { id_token } = req.body;
+            const { id_token, device_token } = req.body;
             
             if (!id_token) throw new Error("Missing Apple ID token")
 
@@ -28,6 +28,20 @@ export class AuthContoller {
                     data: {
                         appleId,
                         email
+                    }
+                })
+            }
+
+            if (device_token) {
+                await prisma.device.upsert({
+                    where: {
+                        token: device_token
+                    },
+                    update: {
+                        userId: user.id
+                    },
+                    create: {
+                        token: device_token, userId: user.id
                     }
                 })
             }
