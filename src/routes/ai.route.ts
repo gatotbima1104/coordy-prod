@@ -135,7 +135,7 @@ export const aiRouter = () => {
   const aiRouter = new AiController();
 
   router.post("/intersections", verifyToken, aiRouter.recommendIntersectionTimes);
-  router.post("/insight", aiRouter.getResponseContext);
+  router.post("/insight", verifyToken, aiRouter.getResponseContext);
 
   return router;
 };
