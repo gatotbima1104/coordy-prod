@@ -7,7 +7,7 @@ let options = {
         keyId: APN_KEY_ID,
         teamId: APN_DEVELOPER_TEAM_ID
     },
-    production: false
+    production: true
 }
 
 export const apnProvider = new apn.Provider(options)
