@@ -3,6 +3,7 @@
 import { NextFunction, Request, Response } from "express";
 import { prisma } from "../configs/config";
 import apn from "apn";
+import { sendPushNotification } from "../utils/notification.helper";
 
 export class VoteController {
 
@@ -77,11 +78,11 @@ export class VoteController {
 
                 if (owner?.devices?.length) {
                     for (const device of owner.devices) {
-                    await sendPushNotification(
-                        device.token,
-                        "Participant responded",
-                        `${participant.name} has submitted their availability.`
-                    );
+                        await sendPushNotification(
+                            device.token,
+                            "Participant responded",
+                            `${participant.name} has submitted their availability.`
+                        )
                     }
                 }
 
