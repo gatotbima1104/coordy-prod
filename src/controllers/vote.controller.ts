@@ -8,7 +8,6 @@ export class VoteController {
 
     async voteEvent(req: Request, res: Response, next: NextFunction) {
         try {
-            
             const { eventSlug, participantSlug } = req.params
             const { selectedTimes } = req.body
 
