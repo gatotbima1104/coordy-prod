@@ -28,5 +28,5 @@ export const apnClient = new ApnsClient({
   defaultTopic: APN_BUNDLE_ID,
   keepAlive: true,        // optional but recommended
   requestTimeout: 0,      // optional, 0 = no timeout
-  // host: "api.sandbox.push.apple.com" // uncomment for dev testing
+  host: "api.sandbox.push.apple.com" // uncomment for dev testing
 });
