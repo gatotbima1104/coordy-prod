@@ -7,7 +7,9 @@ export class AuthContoller {
     async signInWithApple(req: Request, res: Response, next: NextFunction) {
         try {
             
+            console.log("hitted")
             const { id_token, device_token } = req.body;
+            console.log(req.body)
             
             if (!id_token) throw new Error("Missing Apple ID token")
 

@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 export class AasaController{
     async signAasaApple(req: Request, res: Response, next: NextFunction) {
         try {
-            
+            console.log("hitted from aasa")
             const aasa = {
                 applinks: {
                     apps: ["7WUR3QM973.com.mario-panApp.Coordiy"],
