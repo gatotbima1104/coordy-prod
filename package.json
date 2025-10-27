@@ -20,6 +20,7 @@
     "@types/express": "^5.0.3",
     "@types/nodemailer": "^7.0.2",
     "apn": "^2.2.0",
+    "apns2": "^12.2.0",
     "apple-signin-auth": "^2.0.0",
     "axios": "^1.12.2",
     "cors": "^2.8.5",
