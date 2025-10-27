@@ -130,8 +130,8 @@ export const eventRouter = () => {
    *         description: Filter events by their status
    *         schema:
    *           type: string
-   *           enum: [DRAFT, WAITING_RESPONSE, NEED_ACTION, COMPLETED]
-   *           example: DRAFT
+   *           enum: [WAITING_RESPONSE, NEED_ACTION, COMPLETED]
+   *           example: WAITING_RESPONSE
    *       - name: year
    *         in: query
    *         required: false
