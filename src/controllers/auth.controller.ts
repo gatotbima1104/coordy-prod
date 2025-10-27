@@ -32,19 +32,44 @@ export class AuthContoller {
                 })
             }
 
+            // if (device_token) {
+            //     await prisma.device.upsert({
+            //         where: {
+            //             token: device_token
+            //         },
+            //         update: {
+            //             userId: user.id
+            //         },
+            //         create: {
+            //             token: device_token, userId: user.id
+            //         }
+            //     })
+            // }
+
             if (device_token) {
-                await prisma.device.upsert({
-                    where: {
-                        token: device_token
-                    },
-                    update: {
-                        userId: user.id
-                    },
-                    create: {
-                        token: device_token, userId: user.id
+                const existingDevice = await prisma.device.findUnique({
+                    where: { token: device_token },
+                });
+
+                if (existingDevice) {
+                    // Update user link if needed
+                    if (existingDevice.userId !== user.id) {
+                    await prisma.device.update({
+                        where: { token: device_token },
+                        data: { userId: user.id },
+                    });
                     }
-                })
+                } else {
+                    // Create new device entry
+                    await prisma.device.create({
+                    data: {
+                        token: device_token,
+                        userId: user.id,
+                    },
+                    });
+                }
             }
+
 
             const token = signToken({
                 id: user.id,
