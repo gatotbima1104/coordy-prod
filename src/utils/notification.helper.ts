@@ -1,12 +1,10 @@
 import { apnClient } from "../configs/apn.config";
 import { Notification, Errors } from "apns2";
 
-// listen for generic errors
 apnClient.on(Errors.error, (err) => {
   console.error("❌ APNs client error:", err.reason, err.notification?.deviceToken);
 });
 
-// optional: handle invalid tokens
 apnClient.on(Errors.badDeviceToken, (err) => {
   console.warn("⚠️ Invalid device token:", err.notification.deviceToken);
 });
@@ -14,16 +12,16 @@ apnClient.on(Errors.badDeviceToken, (err) => {
 export async function sendPushNotification(
   deviceToken: string,
   title: string,
-  body: string
+  body: string,
+  sound: string = "default"
 ) {
   try {
     const notification = new Notification(deviceToken, {
       alert: { title, body },
-      sound: "default",
+      sound,
     });
 
-    const result = await apnClient.send(notification);
-    console.log("✅ APNs push result:", result);
+    await apnClient.send(notification);
   } catch (error) {
     console.error("❌ Failed to send APNs:", error);
   }

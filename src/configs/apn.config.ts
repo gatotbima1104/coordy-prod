@@ -1,33 +1,12 @@
-// @ts-nocheck
-import fs from "fs";
-import path from "path";
 import { ApnsClient } from "apns2";
 import { APN_KEY_ID, APN_TEAM_ID, APN_PRIVATE_KEY, APN_BUNDLE_ID, APN_HOST } from "./config";
-
-// ensure all env vars exist
-if (!APN_KEY_ID || !APN_TEAM_ID || !APN_PRIVATE_KEY || !APN_BUNDLE_ID || !APN_HOST) {
-  console.error("🚨 Missing APNs environment variables:", {
-    APN_KEY_ID,
-    APN_TEAM_ID,
-    APN_PRIVATE_KEY: APN_PRIVATE_KEY ? "✅ set" : "❌ missing",
-    APN_BUNDLE_ID,
-  });
-  throw new Error("Missing APNs environment variables");
-}
-
-// create temp key file if needed (Vercel-safe)
-// const keyPath = path.join("/tmp", "AuthKey.p8");
-// if (!fs.existsSync(keyPath)) {
-//   fs.writeFileSync(keyPath, APN_PRIVATE_KEY.replace(/\\n/g, "\n"));
-// }
 
 export const apnClient = new ApnsClient({
   team: APN_TEAM_ID,
   keyId: APN_KEY_ID,
-//   signingKey: fs.readFileSync(keyPath),
   signingKey: APN_PRIVATE_KEY.replace(/\\n/g, "\n"),
   defaultTopic: APN_BUNDLE_ID,
-  keepAlive: true,        // optional but recommended
-  requestTimeout: 0,      // optional, 0 = no timeout
-  host: APN_HOST // uncomment for dev testing
+  keepAlive: true,
+  requestTimeout: 0,
+  host: APN_HOST
 });

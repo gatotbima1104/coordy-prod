@@ -16,7 +16,7 @@ export const DOMAIN_NAME = process.env.DOMAIN_NAME || ""
 export const SUMOPOD_API_KEY = process.env.SUMOPOD_API_KEY || ""
 export const SUMOPOD_API_URL = process.env.SUMOPOD_API_URL || ""
 
-// ✅ APNs configuration (for easy-apn)
+// APNs configuration
 export const APN_KEY_ID = process.env.APN_KEY_ID || "";
 export const APN_TEAM_ID = process.env.APN_TEAM_ID || "";
 export const APN_PRIVATE_KEY = process.env.APN_PRIVATE_KEY || "";
