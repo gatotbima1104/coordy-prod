@@ -2,10 +2,10 @@
 import fs from "fs";
 import path from "path";
 import { ApnsClient } from "apns2";
-import { APN_KEY_ID, APN_TEAM_ID, APN_PRIVATE_KEY, APN_BUNDLE_ID } from "./config";
+import { APN_KEY_ID, APN_TEAM_ID, APN_PRIVATE_KEY, APN_BUNDLE_ID, APN_HOST } from "./config";
 
 // ensure all env vars exist
-if (!APN_KEY_ID || !APN_TEAM_ID || !APN_PRIVATE_KEY || !APN_BUNDLE_ID) {
+if (!APN_KEY_ID || !APN_TEAM_ID || !APN_PRIVATE_KEY || !APN_BUNDLE_ID || !APN_HOST) {
   console.error("🚨 Missing APNs environment variables:", {
     APN_KEY_ID,
     APN_TEAM_ID,
