@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import OpenAI from "openai";
-import { SUMOPOD_API_KEY, SUMOPOD_API_URL } from "../config";
+import { SUMOPOD_API_KEY, SUMOPOD_API_URL } from "../configs/config";
 
 export class AiController {
   private client: OpenAI;

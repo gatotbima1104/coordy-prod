@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { verify } from "jsonwebtoken";
 import { UserLogin } from "../interfaces/auth.interface";
-import { JWT_SECRET_KEY, prisma } from "../config";
+import { JWT_SECRET_KEY, prisma } from "../configs/config";
 
 export const verifyToken = async (
   req: Request,

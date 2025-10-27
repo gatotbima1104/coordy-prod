@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { APPLE_CLIENT_ID, JWT_SECRET_KEY, prisma } from "../config";
+import { APPLE_CLIENT_ID, JWT_SECRET_KEY, prisma } from "../configs/config";
 import appleSignIn from "apple-signin-auth";
 import { signToken } from "../utils/jwt.helper";
 

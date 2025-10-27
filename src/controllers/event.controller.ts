@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response} from "express";
 import { findEventByTitle } from "../utils/event.helper";
 import { Prisma } from "@prisma/client";
-import { DOMAIN_NAME, prisma } from "../config";
+import { DOMAIN_NAME, prisma } from "../configs/config";
 import { formatToSlug } from "../utils/link.helper";
 import { EventUpdate } from "../interfaces/event.interface";
 

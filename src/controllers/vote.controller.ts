@@ -1,7 +1,8 @@
 // @ts-nocheck
 
 import { NextFunction, Request, Response } from "express";
-import { prisma } from "../config";
+import { prisma } from "../configs/config";
+import apn from "apn";
 
 export class VoteController {
 
@@ -68,6 +69,23 @@ export class VoteController {
                     where: { id: updatedEvent.id },
                     data: { matchedTimes: matchedDateObjs },
                 });
+                
+                // Send notification participant responded
+                const owner = await tx.user.findUnique({
+                    where: {id: updatedEvent.userId},
+                    include: {devices: true}
+                })
+
+                if (owner?.devices?.length) {
+                    for (const device of owner.devices) {
+                    await sendPushNotification(
+                        device.token,
+                        "Participant responded",
+                        `${participant.name} has submitted their availability.`
+                    );
+                    }
+                }
+
                 
                 return { updatedParticipant, matchedTimes: matchedTimes, eventUpdate}
             })

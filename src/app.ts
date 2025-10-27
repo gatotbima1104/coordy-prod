@@ -1,10 +1,10 @@
 import express, { Application, Request, Response, NextFunction } from "express";
-import { PORT } from "./config";
+import { PORT } from "./configs/config";
 import cors from "cors";
 import { authRouter } from "./routes/auth.route";
 import { eventRouter } from "./routes/event.route";
 import { voteRouter } from "./routes/vote.route";
-import { swaggerSpec, swaggerUi } from "./swagger.config";
+import { swaggerSpec, swaggerUi } from "./configs/swagger.config";
 import { aasaRouter } from "./routes/aasa.route";
 import { aiRouter } from "./routes/ai.route";
 
