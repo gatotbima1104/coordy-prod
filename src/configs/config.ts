@@ -15,6 +15,9 @@ export const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || ""
 export const DOMAIN_NAME = process.env.DOMAIN_NAME || ""
 export const SUMOPOD_API_KEY = process.env.SUMOPOD_API_KEY || ""
 export const SUMOPOD_API_URL = process.env.SUMOPOD_API_URL || ""
-export const APN_KEY_SHARED = process.env.APN_KEY_SHARED || ""
-export const APN_KEY_ID = process.env.APN_KEY_ID || ""
-export const APN_DEVELOPER_TEAM_ID = process.env.APN_DEVELOPER_TEAM_ID || ""
+
+// ✅ APNs configuration (for easy-apn)
+export const APN_KEY_ID = process.env.APN_KEY_ID || "";
+export const APN_TEAM_ID = process.env.APN_TEAM_ID || "";
+export const APN_PRIVATE_KEY = process.env.APN_PRIVATE_KEY || "";
+export const APN_BUNDLE_ID = process.env.APN_BUNDLE_ID || "";

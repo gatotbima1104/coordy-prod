@@ -13,8 +13,9 @@ export async function sendPushNotification(
       },
     };
 
+    // send() is supported in node-apn-http2
     const result = await apnClient.send(deviceToken, payload);
-    console.log("✅ APNs sent:", result);
+    console.log("✅ APNs push result:", result);
   } catch (err) {
     console.error("❌ Failed to send APNs:", err);
   }
