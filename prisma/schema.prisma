@@ -65,11 +65,12 @@ enum TimeZone {
 }
 
 model User {
-    id      String  @id @default(uuid())
-    appleId String  @unique
-    email   String?
-    events  Event[]
-    devices  Device[]
+    id              String  @id @default(uuid())
+    appleId         String  @unique
+    email           String?
+    events          Event[]
+    devices         Device[]
+    notifications   Notification[]
 
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
@@ -142,6 +143,7 @@ model Participant {
 
 model Notification {
     id        String             @id @default(uuid())
+    title     String
     type      TypeNotification
     message   String
     status    StatusNotification @default(UNREAD)
@@ -150,6 +152,9 @@ model Notification {
 
     event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
     eventId String
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
 
     @@map("notifications")
 }

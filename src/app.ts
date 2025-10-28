@@ -7,6 +7,7 @@ import { voteRouter } from "./routes/vote.route";
 import { swaggerSpec, swaggerUi } from "./configs/swagger.config";
 import { aasaRouter } from "./routes/aasa.route";
 import { aiRouter } from "./routes/ai.route";
+import { notificationRouter } from "./routes/notification.route";
 
 export class App {
   private app: Application;
@@ -44,6 +45,7 @@ export class App {
     this.app.use("/api/event", eventRouter())
     this.app.use("/api/vote", voteRouter())
     this.app.use("/api/recommend", aiRouter())
+    this.app.use("/api/notification", notificationRouter())
   }
 
   private swaggerDocs() {

@@ -86,6 +86,18 @@ export class VoteController {
                     }
                 }
 
+                // save to notif tables
+                await tx.notification.create({
+                    data: {
+                        title: "Participant responded",
+                        message: `${participant.name} has submitted their availability to ${updatedEvent.title}.`,
+                        status: "UNREAD",
+                        user: { connect: { id: owner!.id } },
+                        event: { connect: { id: updatedEvent.id } },
+                        type: "RESPONSE"
+                    }
+                })
+
                 
                 return { updatedParticipant, matchedTimes: matchedTimes, eventUpdate}
             })
