@@ -48,7 +48,7 @@ export class EventController {
                     return {
                         name: participantName,
                         email: participantEmail,
-                        link: `${DOMAIN_NAME}${formatToSlug(title)}/${formatToSlug(participantName)}`,
+                        link: `${DOMAIN_NAME}?event=${formatToSlug(title)}&participant=${formatToSlug(participantName)}`,
                         status: "PENDING",
                         selectedTimes: [],
                     };

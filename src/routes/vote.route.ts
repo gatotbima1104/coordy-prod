@@ -52,21 +52,21 @@ export const voteRouter = () => {
 
   /**
    * @swagger
-   * /vote/{eventSlug}/{participantSlug}:
+   * /vote:
    *   post:
    *     summary: Submit participant votes for an event
    *     tags: [Votes]
    *     description: Allows a participant to submit selected time slots for a specific event.
    *     parameters:
    *       - name: eventSlug
-   *         in: path
+   *         in: query
    *         required: true
    *         description: Unique slug of the event
    *         schema:
    *           type: string
    *           example: "weekly-team-meeting"
    *       - name: participantSlug
-   *         in: path
+   *         in: query
    *         required: true
    *         description: Unique slug for the participant
    *         schema:
@@ -92,7 +92,7 @@ export const voteRouter = () => {
    *       500:
    *         description: Internal server error
    */
-  router.post("/:eventSlug/:participantSlug", voteController.voteEvent);
+  router.post("/", voteController.voteEvent);
 
   return router;
 };
