@@ -7,16 +7,18 @@ export class AasaController {
 
       const aasa = {
         applinks: {
-          apps: [],
-          details: [
-            {
-              appID: "7WUR3QM973.com.mario-panApp.Coordiy",
-              paths: [ "/appclip/*", "/event/*", "/vote/*", "/" ]
+            "applinks": {
+                "apps": [],
+                "details": [
+                {
+                    "appID": "7WUR3QM973.com.mario-panApp.Coordiy",
+                    "paths": ["*"]
+                }
+                ]
+            },
+            "appclips": {
+                "apps": ["7WUR3QM973.com.mario-panApp.Coordiy.Coordiy"]
             }
-          ]
-        },
-        appclips: {
-          apps: [ "7WUR3QM973.com.mario-panApp.Coordiy.Coordiy" ]
         }
       };
 
