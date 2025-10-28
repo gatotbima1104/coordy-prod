@@ -23,7 +23,7 @@ export class AasaController {
 
       res.setHeader("Content-Type", "application/json");
       res.setHeader("Cache-Control", "no-cache");
-      res.status(200).json(aasa);
+      res.status(200).send(aasa);
     } catch (error) {
       next(error);
     }
