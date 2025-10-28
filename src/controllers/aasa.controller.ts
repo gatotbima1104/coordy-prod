@@ -5,8 +5,8 @@ export class AasaController {
     try {
       console.log("hitted from aasa");
 
-      const aasa = {
-        applinks: {
+      const aasa = 
+        {
             "applinks": {
                 "apps": [],
                 "details": [
@@ -20,7 +20,6 @@ export class AasaController {
                 "apps": ["7WUR3QM973.com.mario-panApp.Coordiy.Coordiy"]
             }
         }
-      };
 
       res.setHeader("Content-Type", "application/json");
       res.setHeader("Cache-Control", "no-cache");
