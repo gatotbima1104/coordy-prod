@@ -49,14 +49,14 @@ export class EventController {
             const participantLetter = participantSlug[0]?.toLowerCase();
 
             // ✅ Generate both link formats
-            const longLink = `${DOMAIN_NAME}/vote?event=${eventSlug}&participant=${participantSlug}`;
+            // const longLink = `${DOMAIN_NAME}/vote?event=${eventSlug}&participant=${participantSlug}`;
             const shortLink = `${DOMAIN_NAME}/vote/${eventLetter}/${participantLetter}`;
 
             return {
               name: participantName,
               email: participantEmail,
               link: shortLink, // use short App Clip link as primary
-              altLink: longLink, // optional: keep full version if your Prisma model supports it
+            //   altLink: longLink, // optional: keep full version if your Prisma model supports it
               status: "PENDING",
               selectedTimes: [],
             };
@@ -81,7 +81,7 @@ export class EventController {
       next(error);
     }
   }
-  
+
     async getEvents(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = req.user?.id;
