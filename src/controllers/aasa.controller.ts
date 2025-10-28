@@ -22,10 +22,8 @@ export class AasaController {
 
       // 🚨 Must not redirect or be cached, and must be served as pure JSON
       res.setHeader("Content-Type", "application/json");
-      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
-      res.setHeader("Pragma", "no-cache");
-      res.setHeader("Expires", "0");
-      res.status(200).send(aasa);
+      res.setHeader("Cache-Control", "no-store");
+      res.status(200).send(JSON.stringify(aasa));
     } catch (error) {
       next(error);
     }

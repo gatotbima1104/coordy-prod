@@ -1,15 +1,26 @@
 {
-    "version": 2,
-    "builds": [
-        { 
-            "src": "/src/server.ts", 
-            "use": "@vercel/node"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "/src/server.ts"
-        }
-    ]
+  "version": 2,
+  "builds": [
+    { "src": "/src/server.ts", "use": "@vercel/node" }
+  ],
+  "routes": [
+    {
+      "src": "/.well-known/apple-app-site-association",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "dest": "/public/.well-known/apple-app-site-association"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/src/server.ts"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "https://www.groev.site/(.*)",
+      "destination": "https://groev.site/$1",
+      "permanent": true
+    }
+  ]
 }
