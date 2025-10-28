@@ -3,9 +3,10 @@ import { AasaController } from "../controllers/aasa.controller";
 
 export const aasaRouter = () => {
   const router = Router();
-  const aasaRouter = new AasaController();
+  const controller = new AasaController();
 
-  router.get("/.well-known/apple-app-site-association", aasaRouter.signAasaApple);
+  // Apple expects EXACT path — no .json extension and in root domain
+  router.get("/.well-known/apple-app-site-association", controller.signAasaApple);
 
   return router;
 };
