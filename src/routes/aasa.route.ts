@@ -6,7 +6,8 @@ export const aasaRouter = () => {
   const controller = new AasaController();
 
   // Apple expects EXACT path — no .json extension and in root domain
-  router.get("/.well-known/apple-app-site-association", controller.signAasaApple);
+  // router.get("/.well-known/apple-app-site-association", controller.signAasaApple);
+  router.get("/apple-app-site-association", controller.signAasaApple);
 
   return router;
 };
