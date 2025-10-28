@@ -7,83 +7,81 @@ import { EventUpdate } from "../interfaces/event.interface";
 
 export class EventController {
     async createEvent(req: Request, res: Response, next: NextFunction) {
-        try {
-            const {
-                title,
-                notes,
-                date,
-                status,
-                estimatedTime,
-                priority,
-                timezone,
-                availableTimes,
-                participants,
-            } = req.body;
+    try {
+      const {
+        title,
+        notes,
+        date,
+        status,
+        estimatedTime,
+        priority,
+        timezone,
+        availableTimes,
+        participants,
+      } = req.body;
 
-            const userId = req.user?.id;
-            const existEvent = await findEventByTitle(title)
-            if (existEvent) throw new Error("Event already exist")
+      const userId = req.user?.id;
+      const existEvent = await findEventByTitle(title);
+      if (existEvent) throw new Error("Event already exists");
 
-            const data: any = {
-                title,
-                availableTimes,
-                date,
-                estimatedTime,
-                status,
-                timezone,
-                notes,
-                priority,
-                slug: formatToSlug(title),
-                user: {
-                    connect: {
-                        id: userId
-                    }
-                },
-                participants: {
-                    create: participants.map((p: any) => {
-                    const participantName = typeof p === "string" ? p : p.name;
-                    const participantEmail =
-                        typeof p === "object" && p.email ? p.email : null;
+      // ✅ Generate event slug
+      const eventSlug = formatToSlug(title);
+      const eventLetter = eventSlug[0]?.toLowerCase();
 
-                    return {
-                        name: participantName,
-                        email: participantEmail,
-                        link: `${DOMAIN_NAME}?event=${formatToSlug(title)}&participant=${formatToSlug(participantName)}`,
-                        status: "PENDING",
-                        selectedTimes: [],
-                    };
-                    }),
-                },
-            }
+      // ✅ Construct event data
+      const data: any = {
+        title,
+        availableTimes,
+        date,
+        estimatedTime,
+        status,
+        timezone,
+        notes,
+        priority,
+        slug: eventSlug,
+        user: { connect: { id: userId } },
+        participants: {
+          create: participants.map((p: any) => {
+            const participantName = typeof p === "string" ? p : p.name;
+            const participantEmail =
+              typeof p === "object" && p.email ? p.email : null;
+            const participantSlug = formatToSlug(participantName);
+            const participantLetter = participantSlug[0]?.toLowerCase();
 
-            const newEvent = await prisma.event.create({
-                data,
-                include: {
-                    user: {
-                        select: {
-                            email: true,
-                        }
-                    },
-                    participants: {
-                        select: {
-                            name: true,
-                            email: true,
-                            link: true
-                        }
-                    }
-                }
-            })
+            // ✅ Generate both link formats
+            const longLink = `${DOMAIN_NAME}/vote?event=${eventSlug}&participant=${participantSlug}`;
+            const shortLink = `${DOMAIN_NAME}/vote/${eventLetter}/${participantLetter}`;
 
-            res.status(201).send({
-                message: "success",
-                data: newEvent
-            })
+            return {
+              name: participantName,
+              email: participantEmail,
+              link: shortLink, // use short App Clip link as primary
+              altLink: longLink, // optional: keep full version if your Prisma model supports it
+              status: "PENDING",
+              selectedTimes: [],
+            };
+          }),
+        },
+      };
 
-        } catch (error) {
-            next(error)
-        }
+      // ✅ Save event + participants
+      const newEvent = await prisma.event.create({
+        data,
+        include: {
+          user: { select: { email: true } },
+          participants: { select: { name: true, email: true, link: true } },
+        },
+      });
+
+      res.status(201).send({
+        message: "success",
+        data: newEvent,
+      });
+    } catch (error) {
+      next(error);
     }
-
+  }
+  
     async getEvents(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = req.user?.id;

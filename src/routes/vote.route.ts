@@ -94,5 +94,38 @@ export const voteRouter = () => {
    */
   router.post("/", voteController.voteEvent);
 
+  /**
+   * @swagger
+   * /vote/{eventLetter}/{participantLetter}:
+   *   post:
+   *     summary: Submit participant votes using short App Clip link
+   *     tags: [Votes]
+   *     description: Allows participants to submit votes using short links like /vote/b/a
+   *     parameters:
+   *       - name: eventLetter
+   *         in: path
+   *         required: true
+   *         description: First letter of event slug
+   *         schema:
+   *           type: string
+   *           example: "b"
+   *       - name: participantLetter
+   *         in: path
+   *         required: true
+   *         description: First letter of participant name
+   *         schema:
+   *           type: string
+   *           example: "a"
+   */
+  router.post("/:eventLetter/:participantLetter", async (req, res, next) => {
+    try {
+      req.query.event = req.params.eventLetter;
+      req.query.participant = req.params.participantLetter;
+      await new VoteController().voteEvent(req, res, next);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   return router;
 };
