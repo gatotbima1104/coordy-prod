@@ -2,7 +2,7 @@ import { NextFunction, Request, Response} from "express";
 import { findEventByTitle } from "../utils/event.helper";
 import { Prisma } from "@prisma/client";
 import { DOMAIN_NAME, prisma } from "../configs/config";
-import { formatToSlug } from "../utils/link.helper";
+import { findEventByShortSlug, formatToSlug, shortEventSlug, shortParticipantSlug } from "../utils/link.helper";
 import { EventUpdate } from "../interfaces/event.interface";
 
 export class EventController {
@@ -25,8 +25,9 @@ export class EventController {
       if (existEvent) throw new Error("Event already exists");
 
       // ✅ Generate event slug
-      const eventSlug = formatToSlug(title);
-      const eventLetter = eventSlug[0]?.toLowerCase();
+    //   const eventSlug = formatToSlug(title);
+    //   const eventLetter = eventSlug[0]?.toLowerCase();
+      const eventSlug = shortEventSlug(title);
 
       // ✅ Construct event data
       const data: any = {
@@ -45,12 +46,14 @@ export class EventController {
             const participantName = typeof p === "string" ? p : p.name;
             const participantEmail =
               typeof p === "object" && p.email ? p.email : null;
-            const participantSlug = formatToSlug(participantName);
-            const participantLetter = participantSlug[0]?.toLowerCase();
+            // const participantSlug = formatToSlug(participantName);
+            // const participantLetter = participantSlug[0]?.toLowerCase();
 
             // ✅ Generate both link formats
             // const longLink = `${DOMAIN_NAME}/vote?event=${eventSlug}&participant=${participantSlug}`;
-            const shortLink = `${DOMAIN_NAME}/vote/${eventLetter}/${participantLetter}`;
+            // const shortLink = `${DOMAIN_NAME}/vote/${eventLetter}/${participantLetter}`;
+            const participantSlug = shortParticipantSlug(participantName);
+            const shortLink = `${DOMAIN_NAME}/vote/${eventSlug}/${participantSlug}`;
 
             return {
               name: participantName,
@@ -284,11 +287,19 @@ export class EventController {
         try {
 
             const { slug } = req.params
-            const event = await prisma.event.findUnique({
-                where: {
-                    slug
-                }
-            })
+            let event = await prisma.event.findUnique({ where: { slug } });
+
+            // If not found, fallback to prefix/short slug search
+            if (!event) {
+                event = await findEventByShortSlug(slug);
+            }
+
+            if (!event) throw new Error(`Event with slug: ${slug} not found`);
+            // const event = await prisma.event.findUnique({
+            //     where: {
+            //         slug
+            //     }
+            // })
 
             if(!event) throw new Error(`Event with slug:${slug} not found`)
 

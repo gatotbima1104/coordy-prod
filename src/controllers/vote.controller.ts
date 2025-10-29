@@ -2,19 +2,22 @@
 import { NextFunction, Request, Response } from "express";
 import { prisma } from "../configs/config";
 import { sendPushNotification } from "../utils/notification.helper";
+import {
+  findEventByShortSlug,
+  findParticipantByShortSlug,
+} from "../utils/slug.helper";
 
 export class VoteController {
   async voteEvent(req: Request, res: Response, next: NextFunction) {
     try {
-      let { event, participant } = req.query;
       const { selectedTimes } = req.body;
+      let { event, participant } = req.query;
 
       console.log("📩 Body:", req.body);
       console.log("📩 Query:", req.query);
       console.log("📩 URL:", req.originalUrl);
 
-      // ✅ Extract event and participant directly from the path
-      // e.g. /vote/p/a → event = "p", participant = "a"
+      // ✅ Extract slugs directly from path: /vote/<eventSlug>/<participantSlug>
       const parts = req.originalUrl.split("?")[0].split("/").filter(Boolean);
       if (parts.length >= 3) {
         event = parts[parts.length - 2];
@@ -26,25 +29,31 @@ export class VoteController {
       if (!event || !participant)
         throw new Error("Missing event or participant identifiers");
 
-      // ✅ 1. Find event by its slug starting with the event letter
-      const eventExist = await prisma.event.findFirst({
-        where: { slug: { startsWith: event.toString() } },
+      // ✅ Find event (support both long and short slug)
+      let eventExist = await prisma.event.findUnique({
+        where: { slug: event as string },
         include: { participants: true },
       });
+
+      if (!eventExist) {
+        eventExist = await findEventByShortSlug(event as string);
+        if (eventExist)
+          eventExist = await prisma.event.findUnique({
+            where: { id: eventExist.id },
+            include: { participants: true },
+          });
+      }
+
       if (!eventExist) throw new Error("Event not found");
 
-      // ✅ 2. Find participant whose link ends with /<participant> or =<participant>
-      const participantExist = eventExist.participants.find((p) => {
-        const link = p.link.trim().toLowerCase();
-        const slug = (participant as string).toLowerCase();
-        return link.endsWith(`/${slug}`) || link.endsWith(`=${slug}`);
-      });
-      if (!participantExist) throw new Error("Participant not found");
+      // ✅ Find participant using helper (handles both / and = endings)
+      const participantExist = findParticipantByShortSlug(eventExist, participant as string);
 
+      if (!participantExist) throw new Error("Participant not found");
       if (participantExist.status === "SUBMITTED")
         throw new Error("This voting link has expired or has already been used.");
 
-      // ✅ 3. Proceed with existing transaction logic
+      // ✅ 3. Proceed with voting transaction
       const transaction = await prisma.$transaction(async (tx) => {
         const updatedParticipant = await tx.participant.update({
           where: { id: participantExist.id },
