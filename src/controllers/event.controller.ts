@@ -50,7 +50,7 @@ export class EventController {
 
             // ✅ Generate both link formats
             // const longLink = `${DOMAIN_NAME}/vote?event=${eventSlug}&participant=${participantSlug}`;
-            const shortLink = `${DOMAIN_NAME}/${eventLetter}/${participantLetter}`;
+            const shortLink = `${DOMAIN_NAME}/vote/${eventLetter}/${participantLetter}`;
 
             return {
               name: participantName,
