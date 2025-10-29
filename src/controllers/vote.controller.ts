@@ -1,11 +1,10 @@
 // @ts-nocheck
+
 import { NextFunction, Request, Response } from "express";
 import { prisma } from "../configs/config";
 import { sendPushNotification } from "../utils/notification.helper";
-import {
-  findEventByShortSlug,
-  findParticipantByShortSlug,
-} from "../utils/slug.helper";
+import { findEventByShortSlug, findParticipantByShortSlug } from "../utils/link.helper";
+
 
 export class VoteController {
   async voteEvent(req: Request, res: Response, next: NextFunction) {
