@@ -11,7 +11,7 @@ export class AasaController {
           details: [
             {
               appID: "7WUR3QM973.com.mario-panApp.Coordiy",
-              paths: ["*"] // You can restrict later to "/vote/*" if you want
+              paths: ["/*"] // You can restrict later to "/vote/*" if you want
             }
           ]
         },
