@@ -53,7 +53,7 @@ export class EventController {
             // const longLink = `${DOMAIN_NAME}/vote?event=${eventSlug}&participant=${participantSlug}`;
             // const shortLink = `${DOMAIN_NAME}/vote/${eventLetter}/${participantLetter}`;
             const participantSlug = shortParticipantSlug(participantName);
-            const shortLink = `${DOMAIN_NAME}/vote/${eventSlug}/${participantSlug}`;
+            const shortLink = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
 
             return {
               name: participantName,

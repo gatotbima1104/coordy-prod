@@ -43,7 +43,7 @@ export class App {
     this.app.use("/", aasaRouter())
     this.app.use("/api/signin", authRouter());
     this.app.use("/api/event", eventRouter())
-    this.app.use("/vote", voteRouter())
+    this.app.use("/", voteRouter())
     this.app.use("/api/recommend", aiRouter())
     this.app.use("/api/notification", notificationRouter())
   }

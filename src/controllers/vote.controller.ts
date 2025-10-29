@@ -16,14 +16,17 @@ export class VoteController {
       console.log("📩 Query:", req.query);
       console.log("📩 URL:", req.originalUrl);
 
-      // ✅ Extract slugs directly from path: /vote/<eventSlug>/<participantSlug>
+      // ✅ Extract slugs from URL dynamically
       const parts = req.originalUrl.split("?")[0].split("/").filter(Boolean);
-      if (parts.length >= 3) {
+
+      // handle both "/vote/event/participant" and short "/event/participant"
+      if (parts.length >= 2) {
         event = parts[parts.length - 2];
         participant = parts[parts.length - 1];
       }
 
       console.log(`🔍 Parsed from path: event=${event}, participant=${participant}`);
+
 
       if (!event || !participant)
         throw new Error("Missing event or participant identifiers");
