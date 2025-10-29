@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "7WUR3QM973.com.mario-panApp.Coordiy",
+        "paths": ["/*"]
+      }
+    ]
+  },
+  "appclips": {
+    "apps": ["7WUR3QM973.com.mario-panApp.Coordiy.Coordiy"]
+  }
+}

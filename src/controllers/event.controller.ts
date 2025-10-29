@@ -288,4 +288,36 @@ export class EventController {
             next(error)
         }
     }
+
+    async pickTime(req: Request, res: Response, next: NextFunction) {
+        try {
+            
+            const userId = req.user?.id;
+            const { selectedTime } = req.body;
+            const { eventId } = req.params;
+
+            if (!userId) throw new Error("Unauthorized");
+
+            const event = await prisma.event.findUnique({
+                where: { id: eventId }
+            })
+            if (!event) throw new Error("Event not found");
+
+            const updatedEvent = await prisma.event.update({
+                where: { id: eventId },
+                data: {
+                    selectedTime,
+                    status: "COMPLETED"
+                }
+            })
+
+            res.status(200).send({ 
+                message: "success", 
+                data: updatedEvent 
+            })
+
+        } catch (error) {
+            next(error)
+        }
+    }
 }

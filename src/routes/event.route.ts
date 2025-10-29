@@ -290,5 +290,55 @@ export const eventRouter = () => {
    */
   router.get("/slug/:slug", eventController.getEventBySlug);
 
+  /**
+   * @swagger
+   * /event/{eventId}/pick-time:
+   *   patch:
+   *     summary: Pick the final time for an event
+   *     tags: [Events]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - name: eventId
+   *         in: path
+   *         required: true
+   *         description: Unique ID of the event to update
+   *         schema:
+   *           type: string
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - selectedTime
+   *             properties:
+   *               selectedTime:
+   *                 type: string
+   *                 format: date-time
+   *                 example: "2025-10-30T09:00:00.000Z"
+   *     responses:
+   *       200:
+   *         description: Event time selected and marked as COMPLETED
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: Event time selected successfully
+   *                 data:
+   *                   $ref: '#/components/schemas/Event'
+   *       400:
+   *         description: Missing or invalid input
+   *       401:
+   *         description: Unauthorized
+   *       404:
+   *         description: Event not found
+   */
+  router.patch("/:eventId/pick-time", verifyToken, eventController.pickTime);
+
   return router;
 };
