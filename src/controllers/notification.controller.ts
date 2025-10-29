@@ -4,7 +4,6 @@ import { prisma } from "../configs/config";
 export class NotificationController{
     async getNotifications(req: Request, res: Response, next: NextFunction) {
         try {
-            
             const userId = req.user?.id
             const data = await prisma.notification.findMany({
                 where: {

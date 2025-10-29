@@ -24,12 +24,7 @@ export class EventController {
       const existEvent = await findEventByTitle(title);
       if (existEvent) throw new Error("Event already exists");
 
-      // ✅ Generate event slug
-    //   const eventSlug = formatToSlug(title);
-    //   const eventLetter = eventSlug[0]?.toLowerCase();
       const eventSlug = shortEventSlug(title);
-
-      // ✅ Construct event data
       const data: any = {
         title,
         availableTimes,
@@ -44,22 +39,14 @@ export class EventController {
         participants: {
           create: participants.map((p: any) => {
             const participantName = typeof p === "string" ? p : p.name;
-            const participantEmail =
-              typeof p === "object" && p.email ? p.email : null;
-            // const participantSlug = formatToSlug(participantName);
-            // const participantLetter = participantSlug[0]?.toLowerCase();
-
-            // ✅ Generate both link formats
-            // const longLink = `${DOMAIN_NAME}/vote?event=${eventSlug}&participant=${participantSlug}`;
-            // const shortLink = `${DOMAIN_NAME}/vote/${eventLetter}/${participantLetter}`;
+            const participantEmail = typeof p === "object" && p.email ? p.email : null;
             const participantSlug = shortParticipantSlug(participantName);
             const shortLink = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
 
             return {
               name: participantName,
               email: participantEmail,
-              link: shortLink, // use short App Clip link as primary
-            //   altLink: longLink, // optional: keep full version if your Prisma model supports it
+              link: shortLink,
               status: "PENDING",
               selectedTimes: [],
             };
@@ -67,7 +54,7 @@ export class EventController {
         },
       };
 
-      // ✅ Save event + participants
+      // Save event
       const newEvent = await prisma.event.create({
         data,
         include: {
@@ -209,7 +196,6 @@ export class EventController {
 
     async editEventById(req: Request, res: Response, next: NextFunction) {
         try {
-            
             const userId = req.user?.id
             const { id } = req.params
             const {
@@ -250,7 +236,7 @@ export class EventController {
                     ...updatedData,
                     participants: participants
                     ? {
-                        deleteMany: {}, // Clear previous participants
+                        deleteMany: {},
                         create: participants.map((p: any) => {
                             const name = typeof p === "string" ? p : p.name;
                             const email = typeof p === "string" ? null : p.email ?? null;
@@ -285,24 +271,14 @@ export class EventController {
 
     async getEventBySlug(req: Request, res: Response, next: NextFunction) {
         try {
-
             const { slug } = req.params
             let event = await prisma.event.findUnique({ where: { slug } });
 
-            // If not found, fallback to prefix/short slug search
             if (!event) {
                 event = await findEventByShortSlug(slug);
             }
-
+            
             if (!event) throw new Error(`Event with slug: ${slug} not found`);
-            // const event = await prisma.event.findUnique({
-            //     where: {
-            //         slug
-            //     }
-            // })
-
-            if(!event) throw new Error(`Event with slug:${slug} not found`)
-
             res.status(200).send({
                 message: "success",
                 data: event
