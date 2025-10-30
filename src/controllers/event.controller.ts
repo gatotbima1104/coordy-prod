@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { NextFunction, Request, Response} from "express";
 import { findEventByTitle } from "../utils/event.helper";
 import { Prisma } from "@prisma/client";
@@ -9,70 +7,71 @@ import { EventUpdate } from "../interfaces/event.interface";
 
 export class EventController {
     async createEvent(req: Request, res: Response, next: NextFunction) {
-    try {
-      const {
-        title,
-        notes,
-        date,
-        status,
-        estimatedTime,
-        priority,
-        timezone,
-        availableTimes,
-        participants,
-      } = req.body;
+        try {
+            const {
+                title,
+                notes,
+                date,
+                status,
+                estimatedTime,
+                priority,
+                timezone,
+                availableTimes,
+                participants,
+            } = req.body;
 
-      const userId = req.user?.id;
-      const existEvent = await findEventByTitle(title);
-      if (existEvent) throw new Error("Event already exists");
+            const userId = req.user?.id;
+            const existEvent = await findEventByTitle(title);
+            if (existEvent) throw new Error("Event already exists");
 
-      const eventSlug = shortEventSlug(title);
-      const data: any = {
-        title,
-        availableTimes,
-        date,
-        estimatedTime,
-        status,
-        timezone,
-        notes,
-        priority,
-        slug: eventSlug,
-        user: { connect: { id: userId } },
-        participants: {
-          create: participants.map((p: any) => {
-            const participantName = typeof p === "string" ? p : p.name;
-            const participantEmail = typeof p === "object" && p.email ? p.email : null;
-            const participantSlug = shortParticipantSlug(participantName);
-            const shortLink = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
+            const eventSlug = shortEventSlug(title);
+            const data: any = {
+                title,
+                availableTimes,
+                date,
+                estimatedTime,
+                status,
+                timezone,
+                notes,
+                priority,
+                slug: eventSlug,
+                user: { connect: { id: userId } },
+                participants: {
+                create: participants.map((p: any) => {
+                    const participantName = typeof p === "string" ? p : p.name;
+                    const participantEmail = typeof p === "object" && p.email ? p.email : null;
+                    const participantSlug = shortParticipantSlug(participantName);
+                    const shortLink = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
 
-            return {
-              name: participantName,
-              email: participantEmail,
-              link: shortLink,
-              status: "PENDING",
-              selectedTimes: [],
+                    return {
+                    name: participantName,
+                    email: participantEmail,
+                    slug: participantSlug,
+                    link: shortLink,
+                    status: "PENDING",
+                    selectedTimes: [],
+                    };
+                }),
+                },
             };
-          }),
-        },
-      };
 
-      // Save event
-      const newEvent = await prisma.event.create({
-        data,
-        include: {
-          user: { select: { email: true } },
-          participants: { select: { name: true, email: true, link: true } },
-        },
-      });
+            // Save event
+            const newEvent = await prisma.event.create({
+                data,
+                include: {
+                user: { select: { email: true } },
+                participants: { select: { name: true, email: true, link: true } },
+                },
+            });
 
-      res.status(201).send({
-        message: "success",
-        data: newEvent,
-      });
-    } catch (error) {
-      next(error);
+            res.status(201).send({
+                message: "success",
+                data: newEvent,
+            });
+        } catch (error) {
+            next(error);
+        }
     }
-  }
 
     async getEvents(req: Request, res: Response, next: NextFunction) {
         try {

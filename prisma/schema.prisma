@@ -125,6 +125,7 @@ model Event {
 model Participant {
     id     String     @id @default(uuid())
     name   String
+    slug   String?
     email  String?
     link   String
     status StatusVote @default(PENDING)

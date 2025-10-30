@@ -37,6 +37,7 @@ export const shortParticipantSlug = (name: string): string =>
 export const findEventByShortSlug = async (shortSlug: string) => {
   const event = await prisma.event.findFirst({
     where: { slug: { startsWith: shortSlug } },
+    include: { participants: true },
   });
   return event;
 };
