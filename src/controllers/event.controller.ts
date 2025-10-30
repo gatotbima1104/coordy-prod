@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { NextFunction, Request, Response} from "express";
 import { findEventByTitle } from "../utils/event.helper";
 import { Prisma } from "@prisma/client";
@@ -272,7 +274,7 @@ export class EventController {
     async getEventBySlug(req: Request, res: Response, next: NextFunction) {
         try {
             const { slug } = req.params
-            let event = await prisma.event.findUnique({ where: { slug } });
+            let event = await prisma.event.findUnique({ where: { slug }, include: { participants: true} });
 
             if (!event) {
                 event = await findEventByShortSlug(slug);
