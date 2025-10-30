@@ -1,3 +1,5 @@
 node_modules/
 .env
 prisma/seed.ts
+.vercel
+.env*.local
