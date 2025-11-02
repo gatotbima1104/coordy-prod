@@ -94,77 +94,83 @@ export class AiController {
 
   async getResponseContext(req: Request, res: Response, next: NextFunction) {
     try {
-      const { context } = req.body || {};
+        const { context } = req.body || {};
 
-      if (!context || typeof context !== "string") {
-        return res.status(400).json({
-          message: "context is required and must be a string.",
-        });
-      }
+        if (!context || typeof context !== "string") {
+          return res.status(400).json({
+            message: "context is required and must be a string.",
+          });
+        }
 
-      const response = await this.client.chat.completions.create({
-        model: "gpt-4.1-mini",
-        messages: [
-          {
-            role: "system",
-            content: `
+        const response = await this.client.chat.completions.create({
+          model: "gpt-4.1-mini",
+          messages: [
+            {
+              role: "system",
+              content: `
                 You are a multilingual natural-language interpreter specialized in scheduling.
-                Your task is to extract structured scheduling information from free-form text, 
+                Your task is to extract structured scheduling information from free-form text,
                 even when expressed informally, partially, or in mixed languages (e.g., Indonesian + English).
 
                 Always return strictly valid JSON in this exact format:
                 {
                   "intent": "confirm_availability" | "reject" | "reschedule" | "ask_clarification",
                   "event": "User Interview",
-                  "date": "2025-10-18",
-                  "time": "08:00",
+                  "datetimes": ["2025-10-30T09:00:00.000Z", "2025-10-30T12:00:00.000Z"],
                   "confidence": 0.9,
                   "rawText": "<original input>"
                 }
 
                 ### Parsing Rules:
                 - Understand flexible date references such as:
-                  - "tanggal 18", "tgl 18", "besok", "lusa", "hari Senin", "next Monday", etc.
-                  - Normalize all dates to ISO format (YYYY-MM-DD) using **today's date as reference** (UTC+7 if unclear).
-                  - Make sure the year is not hallucinated, current year is 2025
+                  "tanggal 18", "tgl 18", "besok", "lusa", "hari Senin", "next Monday", etc.
+                  Normalize all dates to ISO format (YYYY-MM-DD) using today's date as reference (UTC+7 if unclear).
+                  Current year is 2025.
                 - Understand flexible time references such as:
-                  - "jam 8", "08.00", "8 pagi", "20.30", "malam", "sore", "pagi", etc.
-                  - Convert to 24-hour "HH:MM" format.
-                - If no explicit date/time is present, set them to null.
-                - intent should reflect the user's purpose:
-                  - confirm_availability → agrees or confirms
-                  - reject → cannot or declines
-                  - reschedule → proposes new time
-                  - ask_clarification → asks question or unclear
-                - confidence is a float (0.0–1.0) showing extraction certainty.
+                  "jam 8", "08.00", "8 pagi", "20.30", "malam", "sore", "pagi", etc.
+                  Convert to 24-hour HH:MM format.
+                - If multiple times are mentioned ("jam 4 dan 7", "8 or 9"), include all possible ISO datetimes in the array.
+                - Combine each date+time into full ISO 8601 strings ("YYYY-MM-DDTHH:MM:00.000Z").
+                  If no time is found but a date exists, assume "00:00".
+                  If no date is found, set datetimes to [].
+                - intent should reflect user's purpose:
+                  confirm_availability → agrees or confirms
+                  reject → cannot or declines
+                  reschedule → proposes new time
+                  ask_clarification → asks question or unclear
+                - confidence is a float (0.0–1.0).
                 - Never include explanations or text outside JSON.
               `,
-          },
-          {
-            role: "user",
-            content: `Extract the context meaning from the following message:\n"${context}"`,
-          },
-        ],
-        temperature: 0.2,
-      });
+            },
+            {
+              role: "user",
+              content: `Extract the scheduling meaning from: "${context}"`,
+            },
+          ],
+          temperature: 0.2,
+        });
 
-      // Parse GPT output safely
-      let parsed;
-      try {
-        parsed = JSON.parse(response.choices[0]?.message?.content || "{}");
-      } catch {
-        parsed = {
-          intent: "unknown",
-          date: null,
-          time: null,
-          confidence: 0.0,
-          rawText: context,
-        };
-      }
+        // Parse GPT output safely
+        let parsed;
+        try {
+          parsed = JSON.parse(response.choices[0]?.message?.content || "{}");
 
-      return res.status(200).json({
-        message: "success",
-        data: parsed,
+          // Normalize datetimes array
+          if (!Array.isArray(parsed.datetimes)) {
+            parsed.datetimes = parsed.datetimes ? [parsed.datetimes] : [];
+          }
+        } catch {
+          parsed = {
+            intent: "unknown",
+            datetimes: [],
+            confidence: 0.0,
+            rawText: context,
+          };
+        }
+
+        return res.status(200).json({
+          message: "success",
+          data: parsed,
       });
     } catch (error) {
       next(error);
