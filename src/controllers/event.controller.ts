@@ -197,30 +197,28 @@ export class EventController {
 
     async editEventById(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = req.user?.id
-            const { id } = req.params
+            const userId = req.user?.id;
+            const { id } = req.params;
             const {
-                title,
-                notes,
-                date,
-                status,
-                estimatedTime,
-                priority,
-                timezone,
-                availableTimes,
-                participants,
-            } = req.body
+            title,
+            notes,
+            date,
+            status,
+            estimatedTime,
+            priority,
+            timezone,
+            availableTimes,
+            participants,
+            } = req.body;
 
             const existEvent = await prisma.event.findUnique({
-                where: {
-                    id,
-                    userId
-                }
-            })
+            where: { id, userId },
+            include: { participants: true },
+            });
 
-            if(!existEvent) throw new Error(`Event with ID: ${id} not found`)
-            const updatedData: EventUpdate = {}
+            if (!existEvent) throw new Error(`Event with ID: ${id} not found`);
 
+            const updatedData: any = {};
             if (title) updatedData.title = title;
             if (notes) updatedData.notes = notes;
             if (date) updatedData.date = date;
@@ -229,44 +227,56 @@ export class EventController {
             if (priority) updatedData.priority = priority;
             if (timezone) updatedData.timezone = timezone;
             if (availableTimes) updatedData.availableTimes = availableTimes;
-            if (participants) updatedData.participants = participants;
+
+            // ✅ If participants exist in the request, update only those
+            if (participants && participants.length > 0) {
+            for (const p of participants) {
+                const name = typeof p === "string" ? p : p.name;
+                if (!name) throw new Error("Each participant must have a name");
+
+                const participantExist = existEvent.participants.find(
+                (part) => part.name.toLowerCase().trim() === name.toLowerCase().trim()
+                );
+
+                if (participantExist) {
+                // 🔹 Update existing participant (partial fields)
+                await prisma.participant.update({
+                    where: { id: participantExist.id },
+                    data: {
+                    selectedTimes: p.selectedTimes ?? participantExist.selectedTimes,
+                    status: p.status ?? participantExist.status,
+                    email: p.email ?? participantExist.email,
+                    },
+                });
+                } else {
+                // 🔹 Add new participant if not found
+                await prisma.participant.create({
+                    data: {
+                    name,
+                    email: p.email ?? null,
+                    link: `${DOMAIN_NAME}${formatToSlug(title || existEvent.title)}/${formatToSlug(name)}`,
+                    status: p.status ?? "PENDING",
+                    selectedTimes: p.selectedTimes ?? [],
+                    event: { connect: { id: existEvent.id } },
+                    },
+                });
+                }
+            }
+            }
 
             const updatedEvent = await prisma.event.update({
-                where: { id },
-                data: {
-                    ...updatedData,
-                    participants: participants
-                    ? {
-                        deleteMany: {},
-                        create: participants.map((p: any) => {
-                            const name = typeof p === "string" ? p : p.name;
-                            const email = typeof p === "string" ? null : p.email ?? null;
-
-                            if (!name) {
-                            throw new Error("Each participant must have a name");
-                            }
-
-                            return {
-                            name,
-                            email,
-                            link: `${DOMAIN_NAME}${formatToSlug(title || existEvent.title)}/${formatToSlug(name)}`,
-                            status: "PENDING",
-                            selectedTimes: [],
-                            };
-                        }),
-                        }
-                    : undefined,
-                },
-                include: { participants: true },
+            where: { id },
+            data: updatedData,
+            include: { participants: true },
             });
 
             res.status(200).send({
-                message: "success",
-                data: updatedEvent
-            })
-
+            message: "success",
+            data: updatedEvent,
+            });
         } catch (error) {
-            next(error)
+            console.error("❌ editEventById error:", error);
+            next(error);
         }
     }
 
