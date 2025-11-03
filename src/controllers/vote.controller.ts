@@ -124,7 +124,13 @@ export class VoteController {
 
     } catch (error) {
       console.error("❌ voteEvent error:", error);
-      next(error);
+      
+      const message = error instanceof Error ? error.message : "Unexpected server error";
+
+      res.status(400).json({
+        data: "success",
+        message,
+      });
     }
   }
 }
