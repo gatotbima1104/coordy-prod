@@ -4,69 +4,97 @@ import { Prisma } from "@prisma/client";
 import { DOMAIN_NAME, prisma } from "../configs/config";
 import { findEventByShortSlug, formatToSlug, shortEventSlug, shortParticipantSlug } from "../utils/link.helper";
 import { EventUpdate } from "../interfaces/event.interface";
+import { uuidToSlug } from "../utils/slug.helper";
 
 export class EventController {
     async createEvent(req: Request, res: Response, next: NextFunction) {
         try {
             const {
-                title,
-                notes,
-                date,
-                status,
-                estimatedTime,
-                priority,
-                timezone,
-                availableTimes,
-                participants,
+            title,
+            notes,
+            date,
+            status,
+            estimatedTime,
+            priority,
+            timezone,
+            availableTimes,
+            participants,
             } = req.body;
 
             const userId = req.user?.id;
-            const existEvent = await findEventByTitle(title);
+
+            const existEvent = await prisma.event.findFirst({
+                where: { title, userId },
+            });
+
             if (existEvent) throw new Error("Event already exists");
 
-            const eventSlug = shortEventSlug(title);
-            const data: any = {
-                title,
-                availableTimes,
-                date,
-                estimatedTime,
-                status,
-                timezone,
-                notes,
-                priority,
-                slug: eventSlug,
-                user: { connect: { id: userId } },
-                participants: {
-                create: participants.map((p: any) => {
-                    const participantName = typeof p === "string" ? p : p.name;
-                    const participantEmail = typeof p === "object" && p.email ? p.email : null;
-                    const participantSlug = shortParticipantSlug(participantName);
-                    const shortLink = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
-
-                    return {
-                    name: participantName,
-                    email: participantEmail,
-                    slug: participantSlug,
-                    link: shortLink,
-                    status: "PENDING",
-                    selectedTimes: [],
-                    };
-                }),
-                },
-            };
-
-            // Save event
             const newEvent = await prisma.event.create({
-                data,
-                include: {
-                user: { select: { email: true } },
-                participants: { select: { name: true, email: true, link: true } },
+                data: {
+                    title,
+                    notes,
+                    date,
+                    status,
+                    estimatedTime,
+                    priority,
+                    timezone,
+                    availableTimes,
+                    slug: `temp-${Math.random().toString(36).substring(2, 8)}`,
+                    user: { connect: { id: userId } },
                 },
+            });
+
+            const eventSlug = uuidToSlug(newEvent.id);
+            const createdParticipants = await Promise.all(
+                participants.map(async (p: any) => {
+                    const name = typeof p === "string" ? p : p.name;
+                    const email = typeof p === "object" && p.email ? p.email : null;
+
+                    // Create participant to get UUID
+                    const participant = await prisma.participant.create({
+                        data: {
+                            name,
+                            email,
+                            slug: `temp-${Math.random().toString(36).substring(2, 8)}`,
+                            link: "temp",
+                            status: "PENDING",
+                            selectedTimes: [],
+                            event: { connect: { id: newEvent.id } },
+                        },
+                    });
+
+                    let participantSlug = uuidToSlug(participant.id);
+
+                    const existing = await prisma.participant.findFirst({
+                        where: {
+                            slug: participantSlug,
+                            eventId: newEvent.id,
+                            NOT: { id: participant.id },
+                        },
+                    });
+
+                    if (existing) participantSlug += "x";
+
+                    const link = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
+
+                    // Update slug dan link
+                    return prisma.participant.update({
+                        where: { id: participant.id },
+                        data: { slug: participantSlug, link },
+                    });
+                })
+            );
+
+            // update event slug
+            const updatedEvent = await prisma.event.update({
+                where: { id: newEvent.id },
+                data: { slug: eventSlug },
+                include: { participants: true },
             });
 
             res.status(201).send({
                 message: "success",
-                data: newEvent,
+                data: updatedEvent,
             });
         } catch (error) {
             next(error);
@@ -200,20 +228,20 @@ export class EventController {
             const userId = req.user?.id;
             const { id } = req.params;
             const {
-            title,
-            notes,
-            date,
-            status,
-            estimatedTime,
-            priority,
-            timezone,
-            availableTimes,
-            participants,
+                title,
+                notes,
+                date,
+                status,
+                estimatedTime,
+                priority,
+                timezone,
+                availableTimes,
+                participants,
             } = req.body;
 
             const existEvent = await prisma.event.findUnique({
-            where: { id, userId },
-            include: { participants: true },
+                where: { id, userId },
+                include: { participants: true },
             });
 
             if (!existEvent) throw new Error(`Event with ID: ${id} not found`);
@@ -228,54 +256,72 @@ export class EventController {
             if (timezone) updatedData.timezone = timezone;
             if (availableTimes) updatedData.availableTimes = availableTimes;
 
-            // ✅ If participants exist in the request, update only those
+            const eventSlug = existEvent.slug || uuidToSlug(existEvent.id);
             if (participants && participants.length > 0) {
-            for (const p of participants) {
-                const name = typeof p === "string" ? p : p.name;
-                if (!name) throw new Error("Each participant must have a name");
+                for (const p of participants) {
+                    const name = typeof p === "string" ? p : p.name;
+                    if (!name) throw new Error("Each participant must have a name");
 
-                const participantExist = existEvent.participants.find(
-                (part) => part.name.toLowerCase().trim() === name.toLowerCase().trim()
-                );
+                    const participantExist = existEvent.participants.find(
+                        (part) => part.name.toLowerCase().trim() === name.toLowerCase().trim()
+                    );
 
-                if (participantExist) {
-                // 🔹 Update existing participant (partial fields)
-                await prisma.participant.update({
-                    where: { id: participantExist.id },
-                    data: {
-                    selectedTimes: p.selectedTimes ?? participantExist.selectedTimes,
-                    status: p.status ?? participantExist.status,
-                    email: p.email ?? participantExist.email,
-                    },
-                });
-                } else {
-                // 🔹 Add new participant if not found
-                await prisma.participant.create({
-                    data: {
-                    name,
-                    email: p.email ?? null,
-                    link: `${DOMAIN_NAME}${formatToSlug(title || existEvent.title)}/${formatToSlug(name)}`,
-                    status: p.status ?? "PENDING",
-                    selectedTimes: p.selectedTimes ?? [],
-                    event: { connect: { id: existEvent.id } },
-                    },
-                });
+                    if (participantExist) {
+                        await prisma.participant.update({
+                            where: { id: participantExist.id },
+                            data: {
+                                selectedTimes: p.selectedTimes ?? participantExist.selectedTimes,
+                                status: p.status ?? participantExist.status,
+                                email: p.email ?? participantExist.email,
+                            },
+                        });
+                    } else {
+                        const newParticipant = await prisma.participant.create({
+                            data: {
+                                name,
+                                slug: `temp-${Math.random().toString(36).substring(2, 8)}`,
+                                link: "temp",
+                                status: p.status ?? "PENDING",
+                                selectedTimes: p.selectedTimes ?? [],
+                                event: { connect: { id: existEvent.id } },
+                            },
+                        });
+
+                        // Generate UUID-based slug
+                        let participantSlug = uuidToSlug(newParticipant.id);
+
+                        // Optional safety: check slug collision inside same event
+                        const existing = await prisma.participant.findFirst({
+                            where: {
+                                slug: participantSlug,
+                                eventId: existEvent.id,
+                                NOT: { id: newParticipant.id },
+                            },
+                        });
+                        if (existing) participantSlug += "x"; // fallback uniqueness
+
+                        // Generate link using event slug
+                        const link = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
+
+                        await prisma.participant.update({
+                            where: { id: newParticipant.id },
+                            data: { slug: participantSlug, link },
+                        });
+                    }
                 }
-            }
             }
 
             const updatedEvent = await prisma.event.update({
-            where: { id },
-            data: updatedData,
-            include: { participants: true },
+                where: { id },
+                data: updatedData,
+                include: { participants: true },
             });
 
             res.status(200).send({
-            message: "success",
-            data: updatedEvent,
+                message: "success",
+                data: updatedEvent,
             });
         } catch (error) {
-            console.error("❌ editEventById error:", error);
             next(error);
         }
     }
