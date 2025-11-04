@@ -258,6 +258,8 @@ export class EventController {
             if (availableTimes) updatedData.availableTimes = availableTimes;
 
             const eventSlug = existEvent.slug || uuidToSlug(existEvent.id);
+            let newParticipantAdded = false;
+
             if (participants && participants.length > 0) {
                 for (const p of participants) {
                     const name = typeof p === "string" ? p : p.name;
@@ -308,8 +310,14 @@ export class EventController {
                             where: { id: newParticipant.id },
                             data: { slug: participantSlug, link },
                         });
+
+                        newParticipantAdded = true;
                     }
                 }
+            }
+
+            if (newParticipantAdded) {
+                updatedData.status = "WAITING_RESPONSE";
             }
 
             const updatedEvent = await prisma.event.update({
