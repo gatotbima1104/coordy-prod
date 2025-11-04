@@ -20,7 +20,7 @@ export const notificationRouter = () => {
    *     summary: Get all notifications for the authenticated user
    *     tags: [Notifications]
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     responses:
    *       200:
    *         description: Successfully retrieved notifications
@@ -65,7 +65,7 @@ export const notificationRouter = () => {
    *     summary: Update a notification’s status (e.g., mark as READ)
    *     tags: [Notifications]
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -107,7 +107,7 @@ export const notificationRouter = () => {
    *     summary: Mark all unread notifications as read
    *     tags: [Notifications]
    *     security:
-   *       - BearerAuth: []
+   *       - bearerAuth: []
    *     responses:
    *       200:
    *         description: All unread notifications marked as read
@@ -120,7 +120,6 @@ export const notificationRouter = () => {
    *                   type: string
    *                   example: Marked 3 notifications as READ
    */
-  router.patch("/mark-all", verifyToken, notificationRouter.getNotifications);
-
+  router.patch("/mark-all", verifyToken, notificationRouter.markAllAsRead);
   return router;
 };

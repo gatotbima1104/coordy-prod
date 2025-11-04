@@ -155,7 +155,8 @@ export class EventController {
                             email: true,
                             status: true,
                             selectedTimes: true,
-                            link: true
+                            link: true,
+                            slug: true
                         }
                     }
                 },
