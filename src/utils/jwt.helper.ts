@@ -3,7 +3,7 @@ import { JWT_SECRET_KEY } from "../configs/config";
 
 type Payload = {
   id?: string;
-  appleId?: string;
+  // appleId?: string;
   email?: string | null;
 };
 

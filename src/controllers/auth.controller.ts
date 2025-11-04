@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { APPLE_CLIENT_ID, JWT_SECRET_KEY, prisma } from "../configs/config";
 import appleSignIn from "apple-signin-auth";
 import { signToken } from "../utils/jwt.helper";
+import crypto from "crypto";
 
 export class AuthContoller {
     async signInWithApple(req: Request, res: Response, next: NextFunction) {
@@ -18,14 +19,16 @@ export class AuthContoller {
             const appleId = decoded.sub
             const email = decoded.email || ""
 
+            const hashedAppleId = crypto.createHash('sha256').update(appleId).digest('hex');
+
             let user = await prisma.user.findUnique({
-                where: { appleId }
+                where: { appleId: hashedAppleId }
             })
 
             if (!user) {
                 user = await prisma.user.create({
                     data: {
-                        appleId,
+                        appleId: hashedAppleId,
                         email
                     }
                 })
@@ -58,7 +61,7 @@ export class AuthContoller {
 
             const token = signToken({
                 id: user.id,
-                appleId: user.appleId,
+                // appleId: user.appleId,
                 email: user.email
             })
 
