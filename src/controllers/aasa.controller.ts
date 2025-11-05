@@ -14,7 +14,7 @@ export class AasaController {
           ]
         },
         appclips: {
-          apps: ["7WUR3QM973.com.mario-panApp.Coordiy.Coordiy"]
+          apps: ["7WUR3QM973.com.mario-panApp.Coordiy.Clip"]
         }
       };
 
