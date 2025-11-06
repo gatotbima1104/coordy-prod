@@ -229,20 +229,20 @@ export class EventController {
             const userId = req.user?.id;
             const { id } = req.params;
             const {
-                title,
-                notes,
-                date,
-                status,
-                estimatedTime,
-                priority,
-                timezone,
-                availableTimes,
-                participants,
+            title,
+            notes,
+            date,
+            status,
+            estimatedTime,
+            priority,
+            timezone,
+            availableTimes,
+            participants,
 
-                // Participant body for share extension needed
-                participantSelectedTimes,
-                participantName, 
-                participantStatus 
+            // from share extension
+            participantSelectedTimes,
+            participantName,
+            participantStatus
             } = req.body;
 
             const existEvent = await prisma.event.findUnique({
@@ -264,89 +264,114 @@ export class EventController {
 
             const eventSlug = existEvent.slug || uuidToSlug(existEvent.id);
             let newParticipantAdded = false;
+            let participantUpdated = false; // track if we need to recompute matched times
 
+            // 🧩 Case 1: Full event participant updates
             if (participants && participants.length > 0) {
-                for (const p of participants) {
-                    const name = typeof p === "string" ? p : p.name;
-                    if (!name) throw new Error("Each participant must have a name");
-
-                    const participantExist = existEvent.participants.find(
-                        (part) => part.name.toLowerCase().trim() === name.toLowerCase().trim()
-                    );
-
-                    if (participantExist) {
-                        await prisma.participant.update({
-                            where: { id: participantExist.id },
-                            data: {
-                                selectedTimes: p.selectedTimes ?? participantExist.selectedTimes,
-                                status: p.status ?? participantExist.status,
-                                email: p.email ?? participantExist.email,
-                            },
-                        });
-                    } else {
-                        const newParticipant = await prisma.participant.create({
-                            data: {
-                                name,
-                                slug: `temp-${Math.random().toString(36).substring(2, 8)}`,
-                                link: "temp",
-                                status: p.status ?? "PENDING",
-                                selectedTimes: p.selectedTimes ?? [],
-                                event: { connect: { id: existEvent.id } },
-                            },
-                        });
-
-                        // Generate UUID-based slug
-                        let participantSlug = uuidToSlug(newParticipant.id);
-
-                        // Optional safety: check slug collision inside same event
-                        const existing = await prisma.participant.findFirst({
-                            where: {
-                                slug: participantSlug,
-                                eventId: existEvent.id,
-                                NOT: { id: newParticipant.id },
-                            },
-                        });
-                        if (existing) participantSlug += "x"; // fallback uniqueness
-
-                        // Generate link using event slug
-                        const link = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
-
-                        await prisma.participant.update({
-                            where: { id: newParticipant.id },
-                            data: { slug: participantSlug, link },
-                        });
-
-                        newParticipantAdded = true;
-                    }
-                }
-            }
-
-            // Check if there is an update for participant
-            if (participantSelectedTimes || participantName) {
-                const targetName = participantName || participants?.[0]?.name;
-
-                if (!targetName) throw new Error("Participant name required");
+            for (const p of participants) {
+                const name = typeof p === "string" ? p : p.name;
+                if (!name) throw new Error("Each participant must have a name");
 
                 const participantExist = existEvent.participants.find(
-                    (p) => p.name.toLowerCase().trim() === targetName.toLowerCase().trim()
+                (part) => part.name.toLowerCase().trim() === name.toLowerCase().trim()
                 );
 
-                if (!participantExist)
-                    throw new Error(`Participant "${targetName}" not found in event`);
-
+                if (participantExist) {
                 await prisma.participant.update({
                     where: { id: participantExist.id },
                     data: {
-                        selectedTimes: participantSelectedTimes ?? participantExist.selectedTimes,
-                        status: participantStatus ?? participantExist.status,
+                    selectedTimes: p.selectedTimes ?? participantExist.selectedTimes,
+                    status: p.status ?? participantExist.status,
+                    email: p.email ?? participantExist.email,
+                    },
+                });
+                participantUpdated = true;
+                } else {
+                const newParticipant = await prisma.participant.create({
+                    data: {
+                    name,
+                    slug: `temp-${Math.random().toString(36).substring(2, 8)}`,
+                    link: "temp",
+                    status: p.status ?? "PENDING",
+                    selectedTimes: p.selectedTimes ?? [],
+                    event: { connect: { id: existEvent.id } },
                     },
                 });
 
-                updatedData.status = "WAITING_RESPONSE";
+                // Generate UUID-based slug and link
+                let participantSlug = uuidToSlug(newParticipant.id);
+                const existing = await prisma.participant.findFirst({
+                    where: {
+                    slug: participantSlug,
+                    eventId: existEvent.id,
+                    NOT: { id: newParticipant.id },
+                    },
+                });
+                if (existing) participantSlug += "x";
+
+                const link = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
+                await prisma.participant.update({
+                    where: { id: newParticipant.id },
+                    data: { slug: participantSlug, link },
+                });
+
+                newParticipantAdded = true;
+                participantUpdated = true;
+                }
+            }
+            }
+
+            // 🧩 Case 2: Share Extension single participant update
+            if (participantSelectedTimes || participantName) {
+            const targetName = participantName || participants?.[0]?.name;
+            if (!targetName) throw new Error("Participant name required");
+
+            const participantExist = existEvent.participants.find(
+                (p) => p.name.toLowerCase().trim() === targetName.toLowerCase().trim()
+            );
+
+            if (!participantExist)
+                throw new Error(`Participant "${targetName}" not found in event`);
+
+            await prisma.participant.update({
+                where: { id: participantExist.id },
+                data: {
+                selectedTimes: participantSelectedTimes ?? participantExist.selectedTimes,
+                status: participantStatus ?? participantExist.status,
+                },
+            });
+
+            participantUpdated = true;
+            updatedData.status = "WAITING_RESPONSE";
             }
 
             if (newParticipantAdded) {
-                updatedData.status = "WAITING_RESPONSE";
+            updatedData.status = "WAITING_RESPONSE";
+            }
+
+            // 🧮 Recalculate matchedTimes if participants changed
+            if (participantUpdated) {
+            const allParticipants = await prisma.participant.findMany({
+                where: { eventId: existEvent.id },
+            });
+
+            const participantTimes = allParticipants
+                .map((p) =>
+                    (p.selectedTimes || []).map((t: any) =>
+                    typeof t === "string" ? t : new Date(t).toISOString()
+                    )
+                )
+                .filter((arr) => Array.isArray(arr) && arr.length > 0);
+
+            let matched: string[] = [];
+            if (participantTimes.length > 0) {
+                matched = participantTimes.reduce((acc, arr) =>
+                    acc.filter((t) => arr.includes(t))
+                );
+            }
+
+
+            updatedData.matchedTimes = matched;
             }
 
             const updatedEvent = await prisma.event.update({
@@ -359,10 +384,11 @@ export class EventController {
                 message: "success",
                 data: updatedEvent,
             });
+
         } catch (error) {
             next(error);
         }
-    }
+        }
 
     async getEventBySlug(req: Request, res: Response, next: NextFunction) {
         try {
