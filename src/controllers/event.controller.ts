@@ -238,6 +238,11 @@ export class EventController {
                 timezone,
                 availableTimes,
                 participants,
+
+                // Participant body for share extension needed
+                participantSelectedTimes,
+                participantName, 
+                participantStatus 
             } = req.body;
 
             const existEvent = await prisma.event.findUnique({
@@ -314,6 +319,30 @@ export class EventController {
                         newParticipantAdded = true;
                     }
                 }
+            }
+
+            // Check if there is an update for participant
+            if (participantSelectedTimes || participantName) {
+                const targetName = participantName || participants?.[0]?.name;
+
+                if (!targetName) throw new Error("Participant name required");
+
+                const participantExist = existEvent.participants.find(
+                    (p) => p.name.toLowerCase().trim() === targetName.toLowerCase().trim()
+                );
+
+                if (!participantExist)
+                    throw new Error(`Participant "${targetName}" not found in event`);
+
+                await prisma.participant.update({
+                    where: { id: participantExist.id },
+                    data: {
+                        selectedTimes: participantSelectedTimes ?? participantExist.selectedTimes,
+                        status: participantStatus ?? participantExist.status,
+                    },
+                });
+
+                updatedData.status = "WAITING_RESPONSE";
             }
 
             if (newParticipantAdded) {
