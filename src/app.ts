@@ -60,40 +60,37 @@ export class App {
       return;
     }
 
-    // Serve your swagger.json
+    // ✅ Serve your generated swagger.json
     this.app.use("/swagger.json", express.static(swaggerFilePath));
 
-    // Serve Swagger UI static assets
+    // ✅ Serve Swagger UI static files (CSS, JS, etc.)
     const swaggerDistPath = swaggerUiDist.getAbsoluteFSPath();
+
+    // ✅ Override swagger-initializer.js to load your spec instead of Petstore
+    this.app.get("/api-docs/swagger-initializer.js", (_req, res) => {
+      res.type("application/javascript").send(`
+        window.onload = function() {
+          const ui = SwaggerUIBundle({
+            url: '/swagger.json',
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+            layout: "StandaloneLayout",
+          });
+          window.ui = ui;
+        };
+      `);
+    });
+
+    // ✅ Serve remaining Swagger UI assets
     this.app.use("/api-docs", express.static(swaggerDistPath));
 
-    // Serve modified index.html (load your spec instead of Petstore)
+    // ✅ Serve customized index.html (title + style tweaks)
     this.app.get(["/api-docs", "/api-docs/"], (req, res) => {
       const indexPath = path.join(swaggerDistPath, "index.html");
       let html = fs.readFileSync(indexPath, "utf8");
 
-      // --- Completely remove the default SwaggerUIBundle init (Petstore) ---
-      html = html.replace(/<script>\s*window\.onload[\s\S]*?<\/script>/, "");
-
-      // --- Inject your own init script to load your spec ---
-      const customInit = `
-        <script>
-          window.onload = function() {
-            const ui = SwaggerUIBundle({
-              url: '/swagger.json',
-              dom_id: '#swagger-ui',
-              deepLinking: true,
-              presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-              layout: "StandaloneLayout",
-            });
-            window.ui = ui;
-          };
-        </script>
-      </body>`;
-
-      html = html.replace("</body>", customInit);
-
-      // Optional: custom title and minimal CSS
+      // Optional: change the title and hide the topbar
       html = html.replace(
         "<title>Swagger UI</title>",
         "<title>Cordy API Docs</title><style>.topbar{display:none}</style>"
