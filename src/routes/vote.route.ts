@@ -55,6 +55,7 @@ export const voteRouter = () => {
    *   post:
    *     summary: Submit participant votes for an event (Public)
    *     tags: [Votes]
+   *     security: []
    *     description: |
    *       Allows participants to submit selected time slots for an event using query parameters.
    *       This endpoint does **not** require authentication.
@@ -101,6 +102,7 @@ export const voteRouter = () => {
    *   post:
    *     summary: Submit votes via short App Clip link (Public)
    *     tags: [Votes]
+   *     security: []
    *     description: |
    *       Allows participants to submit votes via compact short links such as `/vote/b/a`.
    *       This endpoint also does **not** require authentication.
