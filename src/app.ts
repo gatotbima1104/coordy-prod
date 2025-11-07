@@ -9,6 +9,7 @@ import { notificationRouter } from "./routes/notification.route";
 import path from "path";
 import fs from "fs";
 import swaggerUi from "swagger-ui-express";
+import swaggerUiDist from "swagger-ui-dist";
 import cors from "cors";
 
 export class App {
@@ -54,30 +55,32 @@ export class App {
     const swaggerFilePath = path.resolve("public/swagger.json");
 
     if (!fs.existsSync(swaggerFilePath)) {
-      console.warn("⚠️ Swagger JSON not found at", swaggerFilePath);
+      console.warn("⚠️ Swagger JSON not found. Did you run `npm run generate-swagger`?");
       return;
     }
 
-    // Serve the raw Swagger file
+    // Serve swagger.json directly
     this.app.use("/swagger.json", express.static(swaggerFilePath));
 
-    // Mount Swagger UI
-    this.app.use(
-      "/api-docs",
-      swaggerUi.serve,
-      swaggerUi.setup(undefined, {
-        swaggerOptions: {
-          url: "/swagger.json", // ✅ Let Swagger UI fetch it dynamically
-        },
-        customCss: `
-          .swagger-ui .topbar { display: none }
-          body { margin: 0; background: #fafafa; }
-        `,
-        customSiteTitle: "Cordy API Docs",
-      })
-    );
+    // Serve Swagger UI assets manually from swagger-ui-dist
+    const swaggerAssetsPath = swaggerUiDist.getAbsoluteFSPath();
+    this.app.use("/swagger-ui", express.static(swaggerAssetsPath));
 
-    console.log("📘 Swagger UI available at /api-docs, spec served from /swagger.json");
+    // Serve index.html manually
+    this.app.get("/api-docs", (req, res) => {
+      const htmlPath = path.join(swaggerAssetsPath, "index.html");
+      let html = fs.readFileSync(htmlPath, "utf8");
+
+      // Replace default URL with our JSON
+      html = html.replace(
+        'https://petstore.swagger.io/v2/swagger.json',
+        "/swagger.json"
+      );
+
+      res.send(html);
+    });
+
+    console.log("📘 Swagger UI available at /api-docs, serving static assets from /swagger-ui");
   }
 
   // handler configuration
