@@ -586,9 +586,7 @@
             "description": "Invalid input"
           }
         }
-      }
-    },
-    "/api/event": {
+      },
       "get": {
         "summary": "Get all events for the authenticated user",
         "description": "Retrieve all events created by the authenticated user. Supports filtering by title, status, and date (year, month, day).",
