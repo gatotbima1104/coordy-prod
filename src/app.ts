@@ -51,6 +51,7 @@ export class App {
     this.app.use("/api/notification", notificationRouter())
   }
 
+  // Deployment of Swagger UI
   private swaggerDocs() {
     const swaggerFilePath = path.resolve("public/swagger.json");
 
@@ -59,25 +60,38 @@ export class App {
       return;
     }
 
-    // ✅ Serve swagger.json
+    // Serve swagger.json
     this.app.use("/swagger.json", express.static(swaggerFilePath));
 
-    // ✅ Serve Swagger UI assets directly under /api-docs/
+    // Serve all Swagger UI static files (CSS, JS, etc.)
     const swaggerDistPath = swaggerUiDist.getAbsoluteFSPath();
     this.app.use("/api-docs", express.static(swaggerDistPath));
 
-    // ✅ Serve index.html for /api-docs and /api-docs/
+    // Serve a modified index.html that loads your swagger.json by default
     this.app.get(["/api-docs", "/api-docs/"], (req, res) => {
       const indexPath = path.join(swaggerDistPath, "index.html");
       let html = fs.readFileSync(indexPath, "utf8");
 
-      // Point Swagger UI to your JSON file
-      html = html.replace(
-        "https://coordy-prod.vercel.app/swagger.json",
-        "/swagger.json"
-      );
+      // 🔥 Inject a custom SwaggerUIBundle configuration
+      const customInitScript = `
+        <script>
+          window.onload = function() {
+            const ui = SwaggerUIBundle({
+              url: '/swagger.json',
+              dom_id: '#swagger-ui',
+              deepLinking: true,
+              presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+              layout: "StandaloneLayout",
+            });
+            window.ui = ui;
+          };
+        </script>
+      `;
 
-      // Optional: Change title / hide topbar
+      // Remove the default script tag that loads Petstore
+      html = html.replace(/<script>[\s\S]*?<\/script>\s*<\/body>/, `${customInitScript}</body>`);
+
+      // Optional: customize the title and hide topbar
       html = html.replace(
         "<title>Swagger UI</title>",
         "<title>Cordy API Docs</title><style>.topbar{display:none}</style>"
@@ -86,7 +100,7 @@ export class App {
       res.send(html);
     });
 
-    console.log("📘 Swagger UI available at /api-docs");
+    console.log("📘 Swagger UI available at /api-docs (defaulting to /swagger.json)");
   }
 
   // handler configuration
