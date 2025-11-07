@@ -60,20 +60,23 @@ export class App {
       return;
     }
 
-    // Serve swagger.json
+    // Serve your swagger.json
     this.app.use("/swagger.json", express.static(swaggerFilePath));
 
-    // Serve all Swagger UI static files (CSS, JS, etc.)
+    // Serve Swagger UI static assets
     const swaggerDistPath = swaggerUiDist.getAbsoluteFSPath();
     this.app.use("/api-docs", express.static(swaggerDistPath));
 
-    // Serve a modified index.html that loads your swagger.json by default
+    // Serve modified index.html (load your spec instead of Petstore)
     this.app.get(["/api-docs", "/api-docs/"], (req, res) => {
       const indexPath = path.join(swaggerDistPath, "index.html");
       let html = fs.readFileSync(indexPath, "utf8");
 
-      // 🔥 Inject a custom SwaggerUIBundle configuration
-      const customInitScript = `
+      // --- Completely remove the default SwaggerUIBundle init (Petstore) ---
+      html = html.replace(/<script>\s*window\.onload[\s\S]*?<\/script>/, "");
+
+      // --- Inject your own init script to load your spec ---
+      const customInit = `
         <script>
           window.onload = function() {
             const ui = SwaggerUIBundle({
@@ -86,12 +89,11 @@ export class App {
             window.ui = ui;
           };
         </script>
-      `;
+      </body>`;
 
-      // Remove the default script tag that loads Petstore
-      html = html.replace(/<script>[\s\S]*?<\/script>\s*<\/body>/, `${customInitScript}</body>`);
+      html = html.replace("</body>", customInit);
 
-      // Optional: customize the title and hide topbar
+      // Optional: custom title and minimal CSS
       html = html.replace(
         "<title>Swagger UI</title>",
         "<title>Cordy API Docs</title><style>.topbar{display:none}</style>"
@@ -100,7 +102,7 @@ export class App {
       res.send(html);
     });
 
-    console.log("📘 Swagger UI available at /api-docs (defaulting to /swagger.json)");
+    console.log("📘 Swagger UI available at /api-docs (loads /swagger.json by default)");
   }
 
   // handler configuration
