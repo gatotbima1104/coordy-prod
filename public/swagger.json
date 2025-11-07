@@ -25,6 +25,156 @@
       }
     },
     "schemas": {
+      "AiEvent": {
+        "type": "object",
+        "description": "Event context used for scheduling analysis",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "UX Design Sprint"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Prototyping and design alignment session"
+          },
+          "priority": {
+            "type": "string",
+            "example": "HIGH"
+          },
+          "status": {
+            "type": "string",
+            "example": "WAITING_RESPONSE"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Asia/Jakarta"
+          },
+          "totalParticipants": {
+            "type": "integer",
+            "example": 5
+          }
+        }
+      },
+      "AiActivity": {
+        "type": "object",
+        "description": "User activity that can influence meeting time selection",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Morning Jog"
+          },
+          "typicalTime": {
+            "type": "string",
+            "example": "06:00-07:00"
+          },
+          "type": {
+            "type": "string",
+            "example": "exercise"
+          }
+        }
+      },
+      "AiIntersectionRequest": {
+        "type": "object",
+        "required": [
+          "event",
+          "matchedTimes"
+        ],
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/AiEvent"
+          },
+          "activities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiActivity"
+            }
+          },
+          "matchedTimes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "example": [
+              "2025-10-27T09:00:00Z",
+              "2025-10-27T13:00:00Z"
+            ]
+          }
+        }
+      },
+      "AiIntersectionResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "example": [
+              "2025-10-27T09:00:00Z",
+              "2025-10-27T13:00:00Z"
+            ]
+          }
+        }
+      },
+      "AiInsightRequest": {
+        "type": "object",
+        "required": [
+          "context"
+        ],
+        "properties": {
+          "context": {
+            "type": "string",
+            "example": "Oke pak, saya bisa untuk tanggal 18 jam 08 ya"
+          }
+        }
+      },
+      "AiInsightResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "intent": {
+                "type": "string",
+                "example": "confirm_availability"
+              },
+              "event": {
+                "type": "string",
+                "example": "User Interview"
+              },
+              "datetimes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "example": [
+                  "2025-10-30T09:00:00.000Z",
+                  "2025-10-30T12:00:00.000Z"
+                ]
+              },
+              "confidence": {
+                "type": "number",
+                "example": 0.95
+              },
+              "rawText": {
+                "type": "string",
+                "example": "Oke pak, saya bisa untuk tanggal 18 jam 08 ya"
+              }
+            }
+          }
+        }
+      },
       "AppleSignInRequest": {
         "type": "object",
         "required": [
@@ -94,25 +244,25 @@
           },
           "title": {
             "type": "string",
-            "description": "Title of the event"
+            "example": "Team Sync"
           },
           "notes": {
             "type": "string",
-            "description": "Optional notes or description"
+            "example": "Weekly stand-up meeting"
           },
           "date": {
             "type": "string",
             "format": "date-time",
-            "description": "Date of the event"
+            "example": "2025-10-21T09:00:00.000Z"
           },
           "status": {
             "type": "string",
             "enum": [
-              "DRAFT",
               "WAITING_RESPONSE",
               "NEED_ACTION",
               "COMPLETED"
-            ]
+            ],
+            "example": "WAITING_RESPONSE"
           },
           "priority": {
             "type": "string",
@@ -120,29 +270,23 @@
               "LOW",
               "MEDIUM",
               "HIGH"
-            ]
+            ],
+            "example": "LOW"
           },
           "timezone": {
             "type": "string",
-            "example": [
-              "UTC",
-              "GMT",
-              "WIB",
-              "WITA",
-              "WIT",
-              "PST",
-              "EST",
-              "CET",
-              "JST",
-              "AEST"
-            ]
+            "example": "WIB"
           },
           "availableTimes": {
             "type": "array",
             "items": {
               "type": "string",
               "format": "date-time"
-            }
+            },
+            "example": [
+              "2025-10-22T09:00:00Z",
+              "2025-10-23T10:00:00Z"
+            ]
           },
           "matchedTimes": {
             "type": "array",
@@ -162,34 +306,94 @@
               "type": "object",
               "properties": {
                 "name": {
-                  "type": "string"
+                  "type": "string",
+                  "example": "John Doe"
                 },
                 "email": {
-                  "type": "string"
+                  "type": "string",
+                  "example": "john@example.com"
                 }
               }
             }
           }
+        }
+      },
+      "NotificationStatus": {
+        "type": "string",
+        "enum": [
+          "UNREAD",
+          "READ"
+        ],
+        "example": "UNREAD"
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "5e8d6c83-7b6b-4c89-86a9-3e9baf62c123"
+          },
+          "title": {
+            "type": "string",
+            "example": "Participant responded"
+          },
+          "message": {
+            "type": "string",
+            "example": "John has submitted their availability to Project Sync."
+          },
+          "status": {
+            "$ref": "#/components/schemas/NotificationStatus"
+          },
+          "type": {
+            "type": "string",
+            "example": "RESPONSE"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NotificationListResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            }
+          }
+        }
+      },
+      "NotificationUpdateRequest": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/NotificationStatus"
+          }
         },
         "example": {
-          "title": "Team Sync",
-          "notes": "Weekly stand-up meeting",
-          "date": "2025-10-21T09:00:00.000Z",
-          "status": "DRAFT",
-          "priority": "LOW",
-          "timezone": "WIB",
-          "availableTimes": [
-            "2025-10-22T09:00:00Z",
-            "2025-10-23T10:00:00Z"
-          ],
-          "matchedTimes": [],
-          "selectedTime": null,
-          "participants": [
-            {
-              "name": "John Doe",
-              "email": "john@example.com"
-            }
-          ]
+          "status": "READ"
+        }
+      },
+      "NotificationSimpleResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Notification marked as READ"
+          }
         }
       },
       "VoteRequest": {
@@ -229,9 +433,9 @@
             },
             "description": "Times matched across all participants"
           },
-          "updatedEvent": {
+          "updatedParticipant": {
             "type": "object",
-            "description": "Updated event object with participant selections"
+            "description": "Updated participant details after submission"
           }
         }
       }
@@ -243,118 +447,56 @@
     }
   ],
   "paths": {
-    "/api/ai/intersections": {
+    "/ai/intersections": {
       "post": {
-        "summary": "Recommend best meeting intersection times based on activities and matched availability",
-        "description": "Uses an AI model to analyze participants' activities, matched availability, and event context  to suggest the best possible meeting time(s).\n",
+        "summary": "Recommend best meeting intersection times (Public)",
         "tags": [
           "AI"
         ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "description": "Public endpoint — no authentication required.  \nUses an AI model to analyze participants’ activities, matched availability, and event context  \nto suggest the most suitable meeting time(s).\n",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "event": {
-                    "type": "object",
-                    "description": "The event object including title, priority, participants, etc.",
-                    "example": {
-                      "title": "UX Design Sprint",
-                      "notes": "Prototyping and design alignment session",
-                      "priority": "HIGH",
-                      "status": "WAITING_RESPONSE",
-                      "timezone": "Asia/Jakarta",
-                      "totalParticipants": 5
-                    }
-                  },
-                  "activities": {
-                    "type": "array",
-                    "description": "List of user activities that affect time preference.",
-                    "example": [
-                      {
-                        "name": "Morning Jog",
-                        "typicalTime": "06:00-07:00",
-                        "type": "exercise"
-                      },
-                      {
-                        "name": "Lunch Break",
-                        "typicalTime": "12:00-13:00",
-                        "type": "meal"
-                      }
-                    ]
-                  },
-                  "matchedTimes": {
-                    "type": "array",
-                    "description": "Matched available times between stakeholders and arranger.",
-                    "example": [
-                      "2025-10-27T09:00:00Z",
-                      "2025-10-27T13:00:00Z"
-                    ]
-                  }
-                }
+                "$ref": "#/components/schemas/AiIntersectionRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successfully returns the best possible time(s)",
+            "description": "Successfully returns recommended time(s)",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "example": [
-                        "2025-10-27T09:00:00Z",
-                        "2025-10-27T13:00:00Z"
-                      ]
-                    }
-                  }
+                  "$ref": "#/components/schemas/AiIntersectionResponse"
                 }
               }
             }
           },
           "400": {
             "description": "Invalid request body"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
     },
-    "/api/ai/insight": {
+    "/ai/insight": {
       "post": {
-        "summary": "Interpret user’s scheduling message and extract intent/date/time context",
-        "description": "Uses an AI model to understand natural-language scheduling messages (in Indonesian or English) and extract structured intent, date, and time context.\n",
+        "summary": "Interpret natural-language scheduling message (Public)",
         "tags": [
           "AI"
         ],
+        "description": "Public endpoint — no authentication required.  \nUses an AI model to extract structured scheduling intent, date, and time context  \nfrom free-form messages written in Indonesian or English.\n",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "context": {
-                    "type": "string",
-                    "example": "Oke pak, saya bisa untuk tanggal 18 jam 08 ya"
-                  }
-                }
+                "$ref": "#/components/schemas/AiInsightRequest"
               }
             }
           }
@@ -365,48 +507,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "intent": {
-                          "type": "string",
-                          "example": "confirm_availability"
-                        },
-                        "event": {
-                          "type": "string",
-                          "example": "User Interview"
-                        },
-                        "date": {
-                          "type": "string",
-                          "example": "tanggal 18"
-                        },
-                        "time": {
-                          "type": "string",
-                          "example": "jam 08"
-                        },
-                        "confidence": {
-                          "type": "number",
-                          "example": 0.95
-                        },
-                        "rawText": {
-                          "type": "string",
-                          "example": "Oke pak, saya bisa untuk tanggal 18 jam 08 ya"
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/AiInsightResponse"
                 }
               }
             }
           },
           "400": {
             "description": "Missing or invalid context"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
@@ -470,23 +580,18 @@
         },
         "responses": {
           "201": {
-            "description": "Event created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Event"
-                }
-              }
-            }
+            "description": "Event created successfully"
           },
           "400": {
             "description": "Invalid input"
           }
         }
-      },
+      }
+    },
+    "/api/event": {
       "get": {
         "summary": "Get all events for the authenticated user",
-        "description": "Retrieve all events created by the authenticated user. You can filter results by `name`, `status`, or specific date parts (`year`, `month`, `day`).",
+        "description": "Retrieve all events created by the authenticated user. Supports filtering by title, status, and date (year, month, day).",
         "tags": [
           "Events"
         ],
@@ -497,99 +602,76 @@
         ],
         "parameters": [
           {
-            "name": "name",
             "in": "query",
-            "required": false,
-            "description": "Filter events whose title contains this text (case-insensitive)",
+            "name": "title",
             "schema": {
-              "type": "string",
-              "example": "meeting"
-            }
+              "type": "string"
+            },
+            "description": "Filter by event title (case-insensitive)"
           },
           {
-            "name": "status",
             "in": "query",
-            "required": false,
-            "description": "Filter events by their status",
+            "name": "status",
             "schema": {
               "type": "string",
               "enum": [
                 "WAITING_RESPONSE",
                 "NEED_ACTION",
                 "COMPLETED"
-              ],
-              "example": "WAITING_RESPONSE"
-            }
+              ]
+            },
+            "description": "Filter by event status"
           },
           {
+            "in": "query",
             "name": "year",
-            "in": "query",
-            "required": false,
-            "description": "Filter events created in a specific year",
             "schema": {
-              "type": "integer",
-              "example": 2025
-            }
+              "type": "integer"
+            },
+            "description": "Filter by year (e.g. 2025)"
           },
           {
+            "in": "query",
             "name": "month",
-            "in": "query",
-            "required": false,
-            "description": "Filter events created in a specific month (1–12)",
             "schema": {
-              "type": "integer",
-              "example": 10
-            }
+              "type": "integer"
+            },
+            "description": "Filter by month (1–12)"
           },
           {
-            "name": "day",
             "in": "query",
-            "required": false,
-            "description": "Filter events created on a specific day of the month",
+            "name": "day",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter by specific day of the month"
+          },
+          {
+            "in": "query",
+            "name": "offset",
             "schema": {
               "type": "integer",
-              "example": 21
-            }
+              "minimum": 0
+            },
+            "description": "The number of items to skip before starting to collect the result set"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "The number of items to return"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved list of user events",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Event"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Successfully retrieved events"
           },
           "400": {
-            "description": "Invalid query parameter (e.g., invalid status)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Invalid status value."
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Invalid query parameter"
           }
         }
       }
@@ -610,7 +692,6 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Event ID",
             "schema": {
               "type": "string"
             }
@@ -618,14 +699,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Event found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Event"
-                }
-              }
-            }
+            "description": "Event found"
           },
           "404": {
             "description": "Event not found"
@@ -693,17 +767,7 @@
         },
         "responses": {
           "200": {
-            "description": "Event updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Event"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input"
+            "description": "Event updated successfully"
           },
           "404": {
             "description": "Event not found"
@@ -713,17 +777,17 @@
     },
     "/event/slug/{slug}": {
       "get": {
-        "summary": "Get an event by its slug",
+        "summary": "Get an event by its slug (Public)",
         "tags": [
           "Events"
         ],
-        "description": "Retrieve a single event using its unique slug (human-readable identifier).",
+        "description": "Public endpoint — no authentication required.  \nUsed by App Clip or shared links to access an event without logging in.\n",
         "parameters": [
           {
             "name": "slug",
             "in": "path",
             "required": true,
-            "description": "Unique slug identifier for the event (e.g., \"team-sync-meeting\").",
+            "description": "Unique event slug (e.g., \"team-sync-meeting\")",
             "schema": {
               "type": "string"
             }
@@ -731,14 +795,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Event found successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Event"
-                }
-              }
-            }
+            "description": "Event found successfully"
           },
           "404": {
             "description": "Event not found"
@@ -762,7 +819,7 @@
             "name": "eventId",
             "in": "path",
             "required": true,
-            "description": "Unique ID of the event to update",
+            "description": "Event ID",
             "schema": {
               "type": "string"
             }
@@ -774,9 +831,6 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "selectedTime"
-                ],
                 "properties": {
                   "selectedTime": {
                     "type": "string",
@@ -790,26 +844,7 @@
         },
         "responses": {
           "200": {
-            "description": "Event time selected and marked as COMPLETED",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Event time selected successfully"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/Event"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Missing or invalid input"
+            "description": "Event time selected and marked as COMPLETED"
           },
           "401": {
             "description": "Unauthorized"
@@ -831,57 +866,23 @@
             "bearerAuth": []
           }
         ],
+        "description": "Returns all notifications for the currently authenticated user,\nsorted by most recent first.\n",
         "responses": {
           "200": {
             "description": "Successfully retrieved notifications",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string",
-                            "example": "5e8d6c83-7b6b-4c89-86a9-3e9baf62c123"
-                          },
-                          "title": {
-                            "type": "string",
-                            "example": "Participant responded"
-                          },
-                          "message": {
-                            "type": "string",
-                            "example": "John has submitted their availability to Project Sync."
-                          },
-                          "status": {
-                            "type": "string",
-                            "enum": [
-                              "UNREAD",
-                              "READ"
-                            ]
-                          },
-                          "type": {
-                            "type": "string",
-                            "example": "RESPONSE"
-                          },
-                          "createdAt": {
-                            "type": "string",
-                            "format": "date-time"
-                          }
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/NotificationListResponse"
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized – missing or invalid token"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
@@ -897,6 +898,7 @@
             "bearerAuth": []
           }
         ],
+        "description": "Allows the authenticated user to update a specific notification's status,\ntypically marking it as READ or UNREAD.\n",
         "parameters": [
           {
             "in": "path",
@@ -913,17 +915,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "READ",
-                      "UNREAD"
-                    ],
-                    "example": "READ"
-                  }
-                }
+                "$ref": "#/components/schemas/NotificationUpdateRequest"
               }
             }
           }
@@ -934,26 +926,26 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Notification marked as READ"
-                    }
-                  }
+                  "$ref": "#/components/schemas/NotificationSimpleResponse"
                 }
               }
             }
           },
+          "401": {
+            "description": "Unauthorized – missing or invalid token"
+          },
           "404": {
             "description": "Notification not found"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
     },
     "/notification/mark-all": {
       "patch": {
-        "summary": "Mark all unread notifications as read",
+        "summary": "Mark all unread notifications as READ",
         "tags": [
           "Notifications"
         ],
@@ -962,9 +954,10 @@
             "bearerAuth": []
           }
         ],
+        "description": "Marks all notifications with status `UNREAD` as `READ` for the authenticated user.",
         "responses": {
           "200": {
-            "description": "All unread notifications marked as read",
+            "description": "All unread notifications marked as READ",
             "content": {
               "application/json": {
                 "schema": {
@@ -978,20 +971,26 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized – missing or invalid token"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
     },
     "/vote": {
       "post": {
-        "summary": "Submit participant votes for an event",
+        "summary": "Submit participant votes for an event (Public)",
         "tags": [
           "Votes"
         ],
-        "description": "Allows a participant to submit selected time slots for a specific event.",
+        "description": "Allows participants to submit selected time slots for an event using query parameters.\nThis endpoint does **not** require authentication.\n",
         "parameters": [
           {
-            "name": "eventSlug",
+            "name": "event",
             "in": "query",
             "required": true,
             "description": "Unique slug of the event",
@@ -1001,7 +1000,7 @@
             }
           },
           {
-            "name": "participantSlug",
+            "name": "participant",
             "in": "query",
             "required": true,
             "description": "Unique slug for the participant",
@@ -1033,7 +1032,7 @@
             }
           },
           "400": {
-            "description": "Invalid input or missing parameters"
+            "description": "Invalid input or already submitted"
           },
           "404": {
             "description": "Event or participant not found"
@@ -1046,17 +1045,17 @@
     },
     "/vote/{eventLetter}/{participantLetter}": {
       "post": {
-        "summary": "Submit participant votes using short App Clip link",
+        "summary": "Submit votes via short App Clip link (Public)",
         "tags": [
           "Votes"
         ],
-        "description": "Allows participants to submit votes using short links like /vote/b/a",
+        "description": "Allows participants to submit votes via compact short links such as `/vote/b/a`.\nThis endpoint also does **not** require authentication.\n",
         "parameters": [
           {
             "name": "eventLetter",
             "in": "path",
             "required": true,
-            "description": "First letter of event slug",
+            "description": "Short slug representing the event",
             "schema": {
               "type": "string",
               "example": "b"
@@ -1066,20 +1065,51 @@
             "name": "participantLetter",
             "in": "path",
             "required": true,
-            "description": "First letter of participant name",
+            "description": "Short slug representing the participant",
             "schema": {
               "type": "string",
               "example": "a"
             }
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vote submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or already submitted"
+          },
+          "404": {
+            "description": "Event or participant not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
       }
     }
   },
   "tags": [
     {
       "name": "AI",
-      "description": "AI-based scheduling and natural-language interpretation"
+      "description": "Public AI endpoints for scheduling intelligence and natural-language interpretation"
     },
     {
       "name": "Auth",
@@ -1087,15 +1117,15 @@
     },
     {
       "name": "Events",
-      "description": "Manage user events (create, read, update, delete)"
+      "description": "Manage events — creation, editing, participant management, and retrieval"
     },
     {
       "name": "Notifications",
-      "description": "Manage user notifications"
+      "description": "Authenticated endpoints to manage user notifications"
     },
     {
       "name": "Votes",
-      "description": "Participant voting endpoints (time selection for events)"
+      "description": "Public endpoints for participant voting (no authentication required)"
     }
   ]
 }

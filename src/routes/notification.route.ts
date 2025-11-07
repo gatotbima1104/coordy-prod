@@ -10,7 +10,69 @@ export const notificationRouter = () => {
    * @swagger
    * tags:
    *   name: Notifications
-   *   description: Manage user notifications
+   *   description: Authenticated endpoints to manage user notifications
+   */
+
+  /**
+   * @swagger
+   * components:
+   *   schemas:
+   *     NotificationStatus:
+   *       type: string
+   *       enum: [UNREAD, READ]
+   *       example: UNREAD
+   *
+   *     Notification:
+   *       type: object
+   *       properties:
+   *         id:
+   *           type: string
+   *           example: 5e8d6c83-7b6b-4c89-86a9-3e9baf62c123
+   *         title:
+   *           type: string
+   *           example: Participant responded
+   *         message:
+   *           type: string
+   *           example: John has submitted their availability to Project Sync.
+   *         status:
+   *           $ref: '#/components/schemas/NotificationStatus'
+   *         type:
+   *           type: string
+   *           example: RESPONSE
+   *         createdAt:
+   *           type: string
+   *           format: date-time
+   *         updatedAt:
+   *           type: string
+   *           format: date-time
+   *
+   *     NotificationListResponse:
+   *       type: object
+   *       properties:
+   *         message:
+   *           type: string
+   *           example: success
+   *         data:
+   *           type: array
+   *           items:
+   *             $ref: '#/components/schemas/Notification'
+   *
+   *     NotificationUpdateRequest:
+   *       type: object
+   *       required:
+   *         - status
+   *       properties:
+   *         status:
+   *           $ref: '#/components/schemas/NotificationStatus'
+   *       example:
+   *         status: READ
+   *
+   *     NotificationSimpleResponse:
+   *       type: object
+   *       properties:
+   *         message:
+   *           type: string
+   *           example: Notification marked as READ
    */
 
   /**
@@ -21,40 +83,20 @@ export const notificationRouter = () => {
    *     tags: [Notifications]
    *     security:
    *       - bearerAuth: []
+   *     description: |
+   *       Returns all notifications for the currently authenticated user,
+   *       sorted by most recent first.
    *     responses:
    *       200:
    *         description: Successfully retrieved notifications
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 message:
-   *                   type: string
-   *                   example: success
-   *                 data:
-   *                   type: array
-   *                   items:
-   *                     type: object
-   *                     properties:
-   *                       id:
-   *                         type: string
-   *                         example: 5e8d6c83-7b6b-4c89-86a9-3e9baf62c123
-   *                       title:
-   *                         type: string
-   *                         example: Participant responded
-   *                       message:
-   *                         type: string
-   *                         example: John has submitted their availability to Project Sync.
-   *                       status:
-   *                         type: string
-   *                         enum: [UNREAD, READ]
-   *                       type:
-   *                         type: string
-   *                         example: RESPONSE
-   *                       createdAt:
-   *                         type: string
-   *                         format: date-time
+   *               $ref: '#/components/schemas/NotificationListResponse'
+   *       401:
+   *         description: Unauthorized – missing or invalid token
+   *       500:
+   *         description: Internal server error
    */
   router.get("/", verifyToken, notificationRouter.getNotifications);
 
@@ -66,6 +108,9 @@ export const notificationRouter = () => {
    *     tags: [Notifications]
    *     security:
    *       - bearerAuth: []
+   *     description: |
+   *       Allows the authenticated user to update a specific notification's status,
+   *       typically marking it as READ or UNREAD.
    *     parameters:
    *       - in: path
    *         name: id
@@ -78,25 +123,20 @@ export const notificationRouter = () => {
    *       content:
    *         application/json:
    *           schema:
-   *             type: object
-   *             properties:
-   *               status:
-   *                 type: string
-   *                 enum: [READ, UNREAD]
-   *                 example: READ
+   *             $ref: '#/components/schemas/NotificationUpdateRequest'
    *     responses:
    *       200:
    *         description: Notification updated successfully
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 message:
-   *                   type: string
-   *                   example: Notification marked as READ
+   *               $ref: '#/components/schemas/NotificationSimpleResponse'
+   *       401:
+   *         description: Unauthorized – missing or invalid token
    *       404:
    *         description: Notification not found
+   *       500:
+   *         description: Internal server error
    */
   router.patch("/:id", verifyToken, notificationRouter.updateNotification);
 
@@ -104,13 +144,14 @@ export const notificationRouter = () => {
    * @swagger
    * /notification/mark-all:
    *   patch:
-   *     summary: Mark all unread notifications as read
+   *     summary: Mark all unread notifications as READ
    *     tags: [Notifications]
    *     security:
    *       - bearerAuth: []
+   *     description: Marks all notifications with status `UNREAD` as `READ` for the authenticated user.
    *     responses:
    *       200:
-   *         description: All unread notifications marked as read
+   *         description: All unread notifications marked as READ
    *         content:
    *           application/json:
    *             schema:
@@ -119,6 +160,10 @@ export const notificationRouter = () => {
    *                 message:
    *                   type: string
    *                   example: Marked 3 notifications as READ
+   *       401:
+   *         description: Unauthorized – missing or invalid token
+   *       500:
+   *         description: Internal server error
    */
   router.patch("/mark-all", verifyToken, notificationRouter.markAllAsRead);
   return router;

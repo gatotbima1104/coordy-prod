@@ -1,133 +1,183 @@
 import { Router } from "express";
 import { AiController } from "../controllers/ai.controller";
-import { verifyToken } from "../middlewares/auth.middleware";
 
 /**
  * @swagger
  * tags:
  *   name: AI
- *   description: AI-based scheduling and natural-language interpretation
+ *   description: Public AI endpoints for scheduling intelligence and natural-language interpretation
  */
 
 /**
  * @swagger
- * /api/ai/intersections:
+ * components:
+ *   schemas:
+ *     AiEvent:
+ *       type: object
+ *       description: Event context used for scheduling analysis
+ *       properties:
+ *         title:
+ *           type: string
+ *           example: UX Design Sprint
+ *         notes:
+ *           type: string
+ *           example: Prototyping and design alignment session
+ *         priority:
+ *           type: string
+ *           example: HIGH
+ *         status:
+ *           type: string
+ *           example: WAITING_RESPONSE
+ *         timezone:
+ *           type: string
+ *           example: Asia/Jakarta
+ *         totalParticipants:
+ *           type: integer
+ *           example: 5
+ *
+ *     AiActivity:
+ *       type: object
+ *       description: User activity that can influence meeting time selection
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: Morning Jog
+ *         typicalTime:
+ *           type: string
+ *           example: 06:00-07:00
+ *         type:
+ *           type: string
+ *           example: exercise
+ *
+ *     AiIntersectionRequest:
+ *       type: object
+ *       required: [event, matchedTimes]
+ *       properties:
+ *         event:
+ *           $ref: '#/components/schemas/AiEvent'
+ *         activities:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/AiActivity'
+ *         matchedTimes:
+ *           type: array
+ *           items:
+ *             type: string
+ *             format: date-time
+ *           example:
+ *             - 2025-10-27T09:00:00Z
+ *             - 2025-10-27T13:00:00Z
+ *
+ *     AiIntersectionResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: success
+ *         data:
+ *           type: array
+ *           items:
+ *             type: string
+ *             format: date-time
+ *           example:
+ *             - 2025-10-27T09:00:00Z
+ *             - 2025-10-27T13:00:00Z
+ *
+ *     AiInsightRequest:
+ *       type: object
+ *       required: [context]
+ *       properties:
+ *         context:
+ *           type: string
+ *           example: "Oke pak, saya bisa untuk tanggal 18 jam 08 ya"
+ *
+ *     AiInsightResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: success
+ *         data:
+ *           type: object
+ *           properties:
+ *             intent:
+ *               type: string
+ *               example: confirm_availability
+ *             event:
+ *               type: string
+ *               example: User Interview
+ *             datetimes:
+ *               type: array
+ *               items:
+ *                 type: string
+ *                 format: date-time
+ *               example:
+ *                 - 2025-10-30T09:00:00.000Z
+ *                 - 2025-10-30T12:00:00.000Z
+ *             confidence:
+ *               type: number
+ *               example: 0.95
+ *             rawText:
+ *               type: string
+ *               example: "Oke pak, saya bisa untuk tanggal 18 jam 08 ya"
+ */
+
+/**
+ * @swagger
+ * /ai/intersections:
  *   post:
- *     summary: Recommend best meeting intersection times based on activities and matched availability
- *     description: >
- *       Uses an AI model to analyze participants' activities, matched availability, and event context 
- *       to suggest the best possible meeting time(s).
+ *     summary: Recommend best meeting intersection times (Public)
  *     tags: [AI]
- *     security:
- *       - bearerAuth: []
+ *     description: |
+ *       Public endpoint — no authentication required.  
+ *       Uses an AI model to analyze participants’ activities, matched availability, and event context  
+ *       to suggest the most suitable meeting time(s).
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               event:
- *                 type: object
- *                 description: The event object including title, priority, participants, etc.
- *                 example:
- *                   title: "UX Design Sprint"
- *                   notes: "Prototyping and design alignment session"
- *                   priority: "HIGH"
- *                   status: "WAITING_RESPONSE"
- *                   timezone: "Asia/Jakarta"
- *                   totalParticipants: 5
- *               activities:
- *                 type: array
- *                 description: List of user activities that affect time preference.
- *                 example:
- *                   - name: "Morning Jog"
- *                     typicalTime: "06:00-07:00"
- *                     type: "exercise"
- *                   - name: "Lunch Break"
- *                     typicalTime: "12:00-13:00"
- *                     type: "meal"
- *               matchedTimes:
- *                 type: array
- *                 description: Matched available times between stakeholders and arranger.
- *                 example:
- *                   - "2025-10-27T09:00:00Z"
- *                   - "2025-10-27T13:00:00Z"
+ *             $ref: '#/components/schemas/AiIntersectionRequest'
  *     responses:
  *       200:
- *         description: Successfully returns the best possible time(s)
+ *         description: Successfully returns recommended time(s)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: array
- *                   items:
- *                     type: string
- *                   example:
- *                     - "2025-10-27T09:00:00Z"
- *                     - "2025-10-27T13:00:00Z"
+ *               $ref: '#/components/schemas/AiIntersectionResponse'
  *       400:
  *         description: Invalid request body
+ *       500:
+ *         description: Internal server error
  */
 
 /**
  * @swagger
- * /api/ai/insight:
+ * /ai/insight:
  *   post:
- *     summary: Interpret user’s scheduling message and extract intent/date/time context
- *     description: >
- *       Uses an AI model to understand natural-language scheduling messages (in Indonesian or English)
- *       and extract structured intent, date, and time context.
+ *     summary: Interpret natural-language scheduling message (Public)
  *     tags: [AI]
+ *     description: |
+ *       Public endpoint — no authentication required.  
+ *       Uses an AI model to extract structured scheduling intent, date, and time context  
+ *       from free-form messages written in Indonesian or English.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               context:
- *                 type: string
- *                 example: "Oke pak, saya bisa untuk tanggal 18 jam 08 ya"
+ *             $ref: '#/components/schemas/AiInsightRequest'
  *     responses:
  *       200:
  *         description: Successfully parsed context
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: object
- *                   properties:
- *                     intent:
- *                       type: string
- *                       example: confirm_availability
- *                     event:
- *                       type: string
- *                       example: User Interview
- *                     date:
- *                       type: string
- *                       example: tanggal 18
- *                     time:
- *                       type: string
- *                       example: jam 08
- *                     confidence:
- *                       type: number
- *                       example: 0.95
- *                     rawText:
- *                       type: string
- *                       example: "Oke pak, saya bisa untuk tanggal 18 jam 08 ya"
+ *               $ref: '#/components/schemas/AiInsightResponse'
  *       400:
  *         description: Missing or invalid context
+ *       500:
+ *         description: Internal server error
  */
 
 export const aiRouter = () => {

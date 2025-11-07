@@ -104,7 +104,7 @@ export class EventController {
     async getEvents(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = req.user?.id;
-            const { name, year, month, day, status } = req.query;
+            const { title, year, month, day, status } = req.query;
 
             let dateFilter: any = {};
 
@@ -127,8 +127,8 @@ export class EventController {
                 ...dateFilter,
             };
         
-            if (name) {
-                filter.name = { contains: String(name), mode: 'insensitive' };
+            if (title) {
+                filter.title = { contains: String(title), mode: 'insensitive' };
             }
 
             if (status) {

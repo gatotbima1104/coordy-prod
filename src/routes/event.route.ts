@@ -6,7 +6,7 @@ import { verifyToken } from "../middlewares/auth.middleware";
  * @swagger
  * tags:
  *   name: Events
- *   description: Manage user events (create, read, update, delete)
+ *   description: Manage events — creation, editing, participant management, and retrieval
  */
 
 /**
@@ -24,28 +24,31 @@ import { verifyToken } from "../middlewares/auth.middleware";
  *           description: Unique ID of the event
  *         title:
  *           type: string
- *           description: Title of the event
+ *           example: Team Sync
  *         notes:
  *           type: string
- *           description: Optional notes or description
+ *           example: Weekly stand-up meeting
  *         date:
  *           type: string
  *           format: date-time
- *           description: Date of the event
+ *           example: 2025-10-21T09:00:00.000Z
  *         status:
  *           type: string
- *           enum: [DRAFT, WAITING_RESPONSE, NEED_ACTION, COMPLETED]
+ *           enum: [WAITING_RESPONSE, NEED_ACTION, COMPLETED]
+ *           example: WAITING_RESPONSE
  *         priority:
  *           type: string
  *           enum: [LOW, MEDIUM, HIGH]
+ *           example: LOW
  *         timezone:
  *           type: string
- *           example: [UTC, GMT, WIB, WITA, WIT, PST, EST, CET, JST, AEST]
+ *           example: WIB
  *         availableTimes:
  *           type: array
  *           items:
  *             type: string
  *             format: date-time
+ *           example: ["2025-10-22T09:00:00Z", "2025-10-23T10:00:00Z"]
  *         matchedTimes:
  *           type: array
  *           items:
@@ -62,122 +65,92 @@ import { verifyToken } from "../middlewares/auth.middleware";
  *             properties:
  *               name:
  *                 type: string
+ *                 example: John Doe
  *               email:
  *                 type: string
- *       example:
- *         title: "Team Sync"
- *         notes: "Weekly stand-up meeting"
- *         date: "2025-10-21T09:00:00.000Z"
- *         status: "DRAFT"
- *         priority: "LOW"
- *         timezone: "WIB"
- *         availableTimes: ["2025-10-22T09:00:00Z", "2025-10-23T10:00:00Z"]
- *         matchedTimes: []
- *         selectedTime: null
- *         participants: [{ "name": "John Doe", "email": "john@example.com" }]
+ *                 example: john@example.com
  */
 
+/**
+ * @swagger
+ * /event:
+ *   post:
+ *     summary: Create a new event
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Event'
+ *     responses:
+ *       201:
+ *         description: Event created successfully
+ *       400:
+ *         description: Invalid input
+ */
 export const eventRouter = () => {
   const router = Router();
   const eventController = new EventController();
 
-  /**
-   * @swagger
-   * /event:
-   *   post:
-   *     summary: Create a new event
-   *     tags: [Events]
-   *     security:
-   *       - bearerAuth: []
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             $ref: '#/components/schemas/Event'
-   *     responses:
-   *       201:
-   *         description: Event created successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Event'
-   *       400:
-   *         description: Invalid input
-   */
   router.post("/", verifyToken, eventController.createEvent);
 
   /**
    * @swagger
-   * /event:
+   * /api/event:
    *   get:
    *     summary: Get all events for the authenticated user
-   *     description: Retrieve all events created by the authenticated user. You can filter results by `name`, `status`, or specific date parts (`year`, `month`, `day`).
+   *     description: Retrieve all events created by the authenticated user. Supports filtering by title, status, and date (year, month, day).
    *     tags: [Events]
    *     security:
    *       - bearerAuth: []
    *     parameters:
-   *       - name: name
-   *         in: query
-   *         required: false
-   *         description: Filter events whose title contains this text (case-insensitive)
+   *       - in: query
+   *         name: title
    *         schema:
    *           type: string
-   *           example: "meeting"
-   *       - name: status
-   *         in: query
-   *         required: false
-   *         description: Filter events by their status
+   *         description: Filter by event title (case-insensitive)
+   *       - in: query
+   *         name: status
    *         schema:
    *           type: string
    *           enum: [WAITING_RESPONSE, NEED_ACTION, COMPLETED]
-   *           example: WAITING_RESPONSE
-   *       - name: year
-   *         in: query
-   *         required: false
-   *         description: Filter events created in a specific year
+   *         description: Filter by event status
+   *       - in: query
+   *         name: year
    *         schema:
    *           type: integer
-   *           example: 2025
-   *       - name: month
-   *         in: query
-   *         required: false
-   *         description: Filter events created in a specific month (1–12)
+   *         description: Filter by year (e.g. 2025)
+   *       - in: query
+   *         name: month
    *         schema:
    *           type: integer
-   *           example: 10
-   *       - name: day
-   *         in: query
-   *         required: false
-   *         description: Filter events created on a specific day of the month
+   *         description: Filter by month (1–12)
+   *       - in: query
+   *         name: day
    *         schema:
    *           type: integer
-   *           example: 21
+   *         description: Filter by specific day of the month
+   *       - in: query
+   *         name: offset
+   *         schema:
+   *           type: integer
+   *           minimum: 0
+   *         description: The number of items to skip before starting to collect the result set
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *         description: The number of items to return
    *     responses:
    *       200:
-   *         description: Successfully retrieved list of user events
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 message:
-   *                   type: string
-   *                   example: success
-   *                 data:
-   *                   type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/Event'
+   *         description: Successfully retrieved events
    *       400:
-   *         description: Invalid query parameter (e.g., invalid status)
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 message:
-   *                   type: string
-   *                   example: Invalid status value.
+   *         description: Invalid query parameter
    */
   router.get("/", verifyToken, eventController.getEvents);
 
@@ -193,16 +166,11 @@ export const eventRouter = () => {
    *       - name: id
    *         in: path
    *         required: true
-   *         description: Event ID
    *         schema:
    *           type: string
    *     responses:
    *       200:
    *         description: Event found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Event'
    *       404:
    *         description: Event not found
    */
@@ -253,38 +221,30 @@ export const eventRouter = () => {
    *     responses:
    *       200:
    *         description: Event updated successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Event'
-   *       400:
-   *         description: Invalid input
    *       404:
    *         description: Event not found
    */
   router.patch("/:id", verifyToken, eventController.editEventById);
-  
+
   /**
    * @swagger
    * /event/slug/{slug}:
    *   get:
-   *     summary: Get an event by its slug
+   *     summary: Get an event by its slug (Public)
    *     tags: [Events]
-   *     description: Retrieve a single event using its unique slug (human-readable identifier).
+   *     description: |
+   *       Public endpoint — no authentication required.  
+   *       Used by App Clip or shared links to access an event without logging in.
    *     parameters:
    *       - name: slug
    *         in: path
    *         required: true
-   *         description: Unique slug identifier for the event (e.g., "team-sync-meeting").
+   *         description: Unique event slug (e.g., "team-sync-meeting")
    *         schema:
    *           type: string
    *     responses:
    *       200:
    *         description: Event found successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Event'
    *       404:
    *         description: Event not found
    */
@@ -302,7 +262,7 @@ export const eventRouter = () => {
    *       - name: eventId
    *         in: path
    *         required: true
-   *         description: Unique ID of the event to update
+   *         description: Event ID
    *         schema:
    *           type: string
    *     requestBody:
@@ -311,28 +271,14 @@ export const eventRouter = () => {
    *         application/json:
    *           schema:
    *             type: object
-   *             required:
-   *               - selectedTime
    *             properties:
    *               selectedTime:
    *                 type: string
    *                 format: date-time
-   *                 example: "2025-10-30T09:00:00.000Z"
+   *                 example: 2025-10-30T09:00:00.000Z
    *     responses:
    *       200:
    *         description: Event time selected and marked as COMPLETED
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 message:
-   *                   type: string
-   *                   example: Event time selected successfully
-   *                 data:
-   *                   $ref: '#/components/schemas/Event'
-   *       400:
-   *         description: Missing or invalid input
    *       401:
    *         description: Unauthorized
    *       404:

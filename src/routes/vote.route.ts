@@ -5,7 +5,7 @@ import { VoteController } from "../controllers/vote.controller";
  * @swagger
  * tags:
  *   name: Votes
- *   description: Participant voting endpoints (time selection for events)
+ *   description: Public endpoints for participant voting (no authentication required)
  */
 
 /**
@@ -24,10 +24,9 @@ import { VoteController } from "../controllers/vote.controller";
  *             format: date-time
  *           description: List of time slots chosen by the participant
  *       example:
- *         selectedTimes: [
- *           "2025-10-22T09:00:00.000Z",
- *           "2025-10-22T11:00:00.000Z"
- *         ]
+ *         selectedTimes:
+ *           - "2025-10-22T09:00:00.000Z"
+ *           - "2025-10-22T11:00:00.000Z"
  *
  *     VoteResponse:
  *       type: object
@@ -41,9 +40,9 @@ import { VoteController } from "../controllers/vote.controller";
  *             type: string
  *             format: date-time
  *           description: Times matched across all participants
- *         updatedEvent:
+ *         updatedParticipant:
  *           type: object
- *           description: Updated event object with participant selections
+ *           description: Updated participant details after submission
  */
 
 export const voteRouter = () => {
@@ -54,18 +53,20 @@ export const voteRouter = () => {
    * @swagger
    * /vote:
    *   post:
-   *     summary: Submit participant votes for an event
+   *     summary: Submit participant votes for an event (Public)
    *     tags: [Votes]
-   *     description: Allows a participant to submit selected time slots for a specific event.
+   *     description: |
+   *       Allows participants to submit selected time slots for an event using query parameters.
+   *       This endpoint does **not** require authentication.
    *     parameters:
-   *       - name: eventSlug
+   *       - name: event
    *         in: query
    *         required: true
    *         description: Unique slug of the event
    *         schema:
    *           type: string
    *           example: "weekly-team-meeting"
-   *       - name: participantSlug
+   *       - name: participant
    *         in: query
    *         required: true
    *         description: Unique slug for the participant
@@ -86,7 +87,7 @@ export const voteRouter = () => {
    *             schema:
    *               $ref: '#/components/schemas/VoteResponse'
    *       400:
-   *         description: Invalid input or missing parameters
+   *         description: Invalid input or already submitted
    *       404:
    *         description: Event or participant not found
    *       500:
@@ -98,33 +99,50 @@ export const voteRouter = () => {
    * @swagger
    * /vote/{eventLetter}/{participantLetter}:
    *   post:
-   *     summary: Submit participant votes using short App Clip link
+   *     summary: Submit votes via short App Clip link (Public)
    *     tags: [Votes]
-   *     description: Allows participants to submit votes using short links like /vote/b/a
+   *     description: |
+   *       Allows participants to submit votes via compact short links such as `/vote/b/a`.
+   *       This endpoint also does **not** require authentication.
    *     parameters:
    *       - name: eventLetter
    *         in: path
    *         required: true
-   *         description: First letter of event slug
+   *         description: Short slug representing the event
    *         schema:
    *           type: string
    *           example: "b"
    *       - name: participantLetter
    *         in: path
    *         required: true
-   *         description: First letter of participant name
+   *         description: Short slug representing the participant
    *         schema:
    *           type: string
    *           example: "a"
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/VoteRequest'
+   *     responses:
+   *       200:
+   *         description: Vote submitted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/VoteResponse'
+   *       400:
+   *         description: Invalid input or already submitted
+   *       404:
+   *         description: Event or participant not found
+   *       500:
+   *         description: Internal server error
    */
-  router.post("/:eventLetter/:participantLetter", async (req, res, next) => {
-    try {
-      req.query.event = req.params.eventLetter;
-      req.query.participant = req.params.participantLetter;
-      await new VoteController().voteEvent(req, res, next);
-    } catch (err) {
-      next(err);
-    }
+  router.post("/:eventLetter/:participantLetter", (req, res, next) => {
+    req.query.event = req.params.eventLetter;
+    req.query.participant = req.params.participantLetter;
+    voteController.voteEvent(req, res, next);
   });
 
   return router;
