@@ -15,6 +15,233 @@
       "description": "Local"
     }
   ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Paste your JWT token here (format: Bearer <token>)"
+      }
+    },
+    "schemas": {
+      "AppleSignInRequest": {
+        "type": "object",
+        "required": [
+          "identityToken"
+        ],
+        "properties": {
+          "identityToken": {
+            "type": "string",
+            "description": "The Apple identity token (JWT) from client"
+          },
+          "email": {
+            "type": "string",
+            "description": "The user's email (optional, provided during first login)"
+          },
+          "fullName": {
+            "type": "string",
+            "description": "The user's full name (optional)"
+          }
+        },
+        "example": {
+          "identityToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "email": "john@example.com",
+          "fullName": "John Doe"
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT token to authenticate subsequent requests"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "appleId": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "example": {
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "user": {
+            "id": "9cfaef20-1df5-4e42-bb6b-27a6a501f93c",
+            "appleId": "000123.5b4d2e19e8a04aaf90aa2f53a6e5a8b3.1234",
+            "email": "john@example.com"
+          }
+        }
+      },
+      "Event": {
+        "type": "object",
+        "required": [
+          "title",
+          "date"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique ID of the event"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the event"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional notes or description"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date of the event"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "WAITING_RESPONSE",
+              "NEED_ACTION",
+              "COMPLETED"
+            ]
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH"
+            ]
+          },
+          "timezone": {
+            "type": "string",
+            "example": [
+              "UTC",
+              "GMT",
+              "WIB",
+              "WITA",
+              "WIT",
+              "PST",
+              "EST",
+              "CET",
+              "JST",
+              "AEST"
+            ]
+          },
+          "availableTimes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "matchedTimes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "selectedTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "example": {
+          "title": "Team Sync",
+          "notes": "Weekly stand-up meeting",
+          "date": "2025-10-21T09:00:00.000Z",
+          "status": "DRAFT",
+          "priority": "LOW",
+          "timezone": "WIB",
+          "availableTimes": [
+            "2025-10-22T09:00:00Z",
+            "2025-10-23T10:00:00Z"
+          ],
+          "matchedTimes": [],
+          "selectedTime": null,
+          "participants": [
+            {
+              "name": "John Doe",
+              "email": "john@example.com"
+            }
+          ]
+        }
+      },
+      "VoteRequest": {
+        "type": "object",
+        "required": [
+          "selectedTimes"
+        ],
+        "properties": {
+          "selectedTimes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "List of time slots chosen by the participant"
+          }
+        },
+        "example": {
+          "selectedTimes": [
+            "2025-10-22T09:00:00.000Z",
+            "2025-10-22T11:00:00.000Z"
+          ]
+        }
+      },
+      "VoteResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Vote submitted successfully"
+          },
+          "matchedTimes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Times matched across all participants"
+          },
+          "updatedEvent": {
+            "type": "object",
+            "description": "Updated event object with participant selections"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
   "paths": {
     "/api/ai/intersections": {
       "post": {
@@ -846,220 +1073,6 @@
             }
           }
         ]
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "AppleSignInRequest": {
-        "type": "object",
-        "required": [
-          "identityToken"
-        ],
-        "properties": {
-          "identityToken": {
-            "type": "string",
-            "description": "The Apple identity token (JWT) from client"
-          },
-          "email": {
-            "type": "string",
-            "description": "The user's email (optional, provided during first login)"
-          },
-          "fullName": {
-            "type": "string",
-            "description": "The user's full name (optional)"
-          }
-        },
-        "example": {
-          "identityToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-          "email": "john@example.com",
-          "fullName": "John Doe"
-        }
-      },
-      "AuthResponse": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "type": "string",
-            "description": "JWT token to authenticate subsequent requests"
-          },
-          "user": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "appleId": {
-                "type": "string"
-              },
-              "email": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "example": {
-          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-          "user": {
-            "id": "9cfaef20-1df5-4e42-bb6b-27a6a501f93c",
-            "appleId": "000123.5b4d2e19e8a04aaf90aa2f53a6e5a8b3.1234",
-            "email": "john@example.com"
-          }
-        }
-      },
-      "Event": {
-        "type": "object",
-        "required": [
-          "title",
-          "date"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique ID of the event"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the event"
-          },
-          "notes": {
-            "type": "string",
-            "description": "Optional notes or description"
-          },
-          "date": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Date of the event"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "DRAFT",
-              "WAITING_RESPONSE",
-              "NEED_ACTION",
-              "COMPLETED"
-            ]
-          },
-          "priority": {
-            "type": "string",
-            "enum": [
-              "LOW",
-              "MEDIUM",
-              "HIGH"
-            ]
-          },
-          "timezone": {
-            "type": "string",
-            "example": [
-              "UTC",
-              "GMT",
-              "WIB",
-              "WITA",
-              "WIT",
-              "PST",
-              "EST",
-              "CET",
-              "JST",
-              "AEST"
-            ]
-          },
-          "availableTimes": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          "matchedTimes": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          "selectedTime": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "participants": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "email": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        },
-        "example": {
-          "title": "Team Sync",
-          "notes": "Weekly stand-up meeting",
-          "date": "2025-10-21T09:00:00.000Z",
-          "status": "DRAFT",
-          "priority": "LOW",
-          "timezone": "WIB",
-          "availableTimes": [
-            "2025-10-22T09:00:00Z",
-            "2025-10-23T10:00:00Z"
-          ],
-          "matchedTimes": [],
-          "selectedTime": null,
-          "participants": [
-            {
-              "name": "John Doe",
-              "email": "john@example.com"
-            }
-          ]
-        }
-      },
-      "VoteRequest": {
-        "type": "object",
-        "required": [
-          "selectedTimes"
-        ],
-        "properties": {
-          "selectedTimes": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "description": "List of time slots chosen by the participant"
-          }
-        },
-        "example": {
-          "selectedTimes": [
-            "2025-10-22T09:00:00.000Z",
-            "2025-10-22T11:00:00.000Z"
-          ]
-        }
-      },
-      "VoteResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Vote submitted successfully"
-          },
-          "matchedTimes": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "description": "Times matched across all participants"
-          },
-          "updatedEvent": {
-            "type": "object",
-            "description": "Updated event object with participant selections"
-          }
-        }
       }
     }
   },

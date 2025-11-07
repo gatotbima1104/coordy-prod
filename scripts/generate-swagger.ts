@@ -14,6 +14,21 @@ const options = {
       { url: "https://coordy-prod.vercel.app/api", description: "Production" },
       { url: "http://localhost:8000/api", description: "Local" },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+          description: "Paste your JWT token here (format: Bearer <token>)",
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
   apis: [
     "src/routes/**/*.ts",

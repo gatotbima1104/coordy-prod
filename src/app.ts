@@ -8,9 +8,9 @@ import { aiRouter } from "./routes/ai.route";
 import { notificationRouter } from "./routes/notification.route";
 import path from "path";
 import fs from "fs";
-import swaggerUi from "swagger-ui-express";
 import swaggerUiDist from "swagger-ui-dist";
 import cors from "cors";
+// import swaggerUi from "swagger-ui-express";
 
 export class App {
   private app: Application;
@@ -73,7 +73,7 @@ export class App {
 
       // Point Swagger UI to your JSON file
       html = html.replace(
-        "https://petstore.swagger.io/v2/swagger.json",
+        "https://coordy-prod.vercel.app/swagger.json",
         "/swagger.json"
       );
 
