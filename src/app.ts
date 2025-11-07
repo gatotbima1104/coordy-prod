@@ -55,32 +55,38 @@ export class App {
     const swaggerFilePath = path.resolve("public/swagger.json");
 
     if (!fs.existsSync(swaggerFilePath)) {
-      console.warn("⚠️ Swagger JSON not found. Did you run `npm run generate-swagger`?");
+      console.warn("⚠️ Swagger JSON not found at", swaggerFilePath);
       return;
     }
 
-    // Serve swagger.json directly
+    // ✅ Serve swagger.json
     this.app.use("/swagger.json", express.static(swaggerFilePath));
 
-    // Serve Swagger UI assets manually from swagger-ui-dist
-    const swaggerAssetsPath = swaggerUiDist.getAbsoluteFSPath();
-    this.app.use("/swagger-ui", express.static(swaggerAssetsPath));
+    // ✅ Serve Swagger UI assets directly under /api-docs/
+    const swaggerDistPath = swaggerUiDist.getAbsoluteFSPath();
+    this.app.use("/api-docs", express.static(swaggerDistPath));
 
-    // Serve index.html manually
-    this.app.get("/api-docs", (req, res) => {
-      const htmlPath = path.join(swaggerAssetsPath, "index.html");
-      let html = fs.readFileSync(htmlPath, "utf8");
+    // ✅ Serve index.html for /api-docs and /api-docs/
+    this.app.get(["/api-docs", "/api-docs/"], (req, res) => {
+      const indexPath = path.join(swaggerDistPath, "index.html");
+      let html = fs.readFileSync(indexPath, "utf8");
 
-      // Replace default URL with our JSON
+      // Point Swagger UI to your JSON file
       html = html.replace(
-        'https://petstore.swagger.io/v2/swagger.json',
+        "https://petstore.swagger.io/v2/swagger.json",
         "/swagger.json"
+      );
+
+      // Optional: Change title / hide topbar
+      html = html.replace(
+        "<title>Swagger UI</title>",
+        "<title>Cordy API Docs</title><style>.topbar{display:none}</style>"
       );
 
       res.send(html);
     });
 
-    console.log("📘 Swagger UI available at /api-docs, serving static assets from /swagger-ui");
+    console.log("📘 Swagger UI available at /api-docs");
   }
 
   // handler configuration
