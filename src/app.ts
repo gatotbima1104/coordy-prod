@@ -53,24 +53,31 @@ export class App {
   private swaggerDocs() {
     const swaggerFilePath = path.resolve("public/swagger.json");
 
-    if (fs.existsSync(swaggerFilePath)) {
-      // Serve the JSON file explicitly so Swagger UI can fetch it
-      this.app.use("/swagger.json", express.static(swaggerFilePath));
-
-      const swaggerDocument = JSON.parse(fs.readFileSync(swaggerFilePath, "utf-8"));
-
-      this.app.use(
-        "/api-docs",
-        swaggerUi.serve,
-        swaggerUi.setup(swaggerDocument, {
-          swaggerUrl: "/swagger.json", // ✅ important for Vercel
-        })
-      );
-
-      console.log("📘 Swagger loaded from prebuilt JSON file");
-    } else {
-      console.warn("⚠️ Swagger JSON not found. Did you run `npm run generate-swagger`?");
+    if (!fs.existsSync(swaggerFilePath)) {
+      console.warn("⚠️ Swagger JSON not found at", swaggerFilePath);
+      return;
     }
+
+    // Serve the raw Swagger file
+    this.app.use("/swagger.json", express.static(swaggerFilePath));
+
+    // Mount Swagger UI
+    this.app.use(
+      "/api-docs",
+      swaggerUi.serve,
+      swaggerUi.setup(undefined, {
+        swaggerOptions: {
+          url: "/swagger.json", // ✅ Let Swagger UI fetch it dynamically
+        },
+        customCss: `
+          .swagger-ui .topbar { display: none }
+          body { margin: 0; background: #fafafa; }
+        `,
+        customSiteTitle: "Cordy API Docs",
+      })
+    );
+
+    console.log("📘 Swagger UI available at /api-docs, spec served from /swagger.json");
   }
 
   // handler configuration
