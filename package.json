@@ -7,7 +7,9 @@
     "start:dev": "nodemon --files src/server.ts",
     "build": "tsc",
     "postinstall": "prisma generate",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "postbuild": "node dist/scripts/generate-swagger.js",
+    "generate-swagger": "ts-node scripts/generate-swagger.ts"
   },
   "keywords": [],
   "author": "",

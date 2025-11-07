@@ -1,13 +1,15 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import { PORT } from "./configs/config";
-import cors from "cors";
 import { authRouter } from "./routes/auth.route";
 import { eventRouter } from "./routes/event.route";
 import { voteRouter } from "./routes/vote.route";
-import { swaggerSpec, swaggerUi } from "./configs/swagger.config";
 import { aasaRouter } from "./routes/aasa.route";
 import { aiRouter } from "./routes/ai.route";
 import { notificationRouter } from "./routes/notification.route";
+import path from "path";
+import fs from "fs";
+import swaggerUi from "swagger-ui-express";
+import cors from "cors";
 
 export class App {
   private app: Application;
@@ -49,8 +51,15 @@ export class App {
   }
 
   private swaggerDocs() {
-    this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-    console.log(`📘 Swagger docs available at http://localhost:${PORT}/api-docs`);
+    const swaggerFilePath = path.resolve("public/swagger.json");
+
+    if (fs.existsSync(swaggerFilePath)) {
+      const swaggerDocument = JSON.parse(fs.readFileSync(swaggerFilePath, "utf-8"));
+      this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+      console.log("📘 Swagger loaded from prebuilt JSON file");
+    } else {
+      console.warn("⚠️ Swagger JSON not found. Did you run `npm run generate-swagger`?");
+    }
   }
 
   // handler configuration
