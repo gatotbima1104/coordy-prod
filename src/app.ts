@@ -54,8 +54,19 @@ export class App {
     const swaggerFilePath = path.resolve("public/swagger.json");
 
     if (fs.existsSync(swaggerFilePath)) {
+      // Serve the JSON file explicitly so Swagger UI can fetch it
+      this.app.use("/swagger.json", express.static(swaggerFilePath));
+
       const swaggerDocument = JSON.parse(fs.readFileSync(swaggerFilePath, "utf-8"));
-      this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+      this.app.use(
+        "/api-docs",
+        swaggerUi.serve,
+        swaggerUi.setup(swaggerDocument, {
+          swaggerUrl: "/swagger.json", // ✅ important for Vercel
+        })
+      );
+
       console.log("📘 Swagger loaded from prebuilt JSON file");
     } else {
       console.warn("⚠️ Swagger JSON not found. Did you run `npm run generate-swagger`?");
