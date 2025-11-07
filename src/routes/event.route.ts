@@ -99,7 +99,7 @@ export const eventRouter = () => {
 
   /**
    * @swagger
-   * /api/event:
+   * /event:
    *   get:
    *     summary: Get all events for the authenticated user
    *     description: Retrieve all events created by the authenticated user. Supports filtering by title, status, and date (year, month, day).
