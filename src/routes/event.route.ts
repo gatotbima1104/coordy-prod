@@ -69,6 +69,10 @@ import { verifyToken } from "../middlewares/auth.middleware";
  *               email:
  *                 type: string
  *                 example: john@example.com
+ *         location:
+ *           type: string
+ *           enum: [ONSITE, REMOTE]
+ *           example: ONSITE
  */
 
 /**

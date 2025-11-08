@@ -19,6 +19,7 @@ export class EventController {
             timezone,
             availableTimes,
             participants,
+            location,
             } = req.body;
 
             const userId = req.user?.id;
@@ -41,6 +42,7 @@ export class EventController {
                     availableTimes,
                     slug: `temp-${Math.random().toString(36).substring(2, 8)}`,
                     user: { connect: { id: userId } },
+                    location
                 },
             });
 
@@ -238,6 +240,7 @@ export class EventController {
             timezone,
             availableTimes,
             participants,
+            location,
 
             // from share extension
             participantSelectedTimes,
@@ -261,6 +264,7 @@ export class EventController {
             if (priority) updatedData.priority = priority;
             if (timezone) updatedData.timezone = timezone;
             if (availableTimes) updatedData.availableTimes = availableTimes;
+            if (location) updatedData.location = location;
 
             const eventSlug = existEvent.slug || uuidToSlug(existEvent.id);
             let newParticipantAdded = false;

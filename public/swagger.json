@@ -315,6 +315,14 @@
                 }
               }
             }
+          },
+          "location": {
+            "type": "string",
+            "enum": [
+              "ONSITE",
+              "REMOTE"
+            ],
+            "example": "ONSITE"
           }
         }
       },
@@ -985,6 +993,7 @@
         "tags": [
           "Votes"
         ],
+        "security": [],
         "description": "Allows participants to submit selected time slots for an event using query parameters.\nThis endpoint does **not** require authentication.\n",
         "parameters": [
           {
@@ -1047,6 +1056,7 @@
         "tags": [
           "Votes"
         ],
+        "security": [],
         "description": "Allows participants to submit votes via compact short links such as `/vote/b/a`.\nThis endpoint also does **not** require authentication.\n",
         "parameters": [
           {

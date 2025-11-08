@@ -22,6 +22,12 @@ enum StatusCard {
     WAITING_RESPONSE // pertama kali dibuat
     NEED_ACTION // kalo udah masuk semua stakeholder
     COMPLETED // kalo udah schedule dan pick waktu interesection
+    CANCELLED // Ga ketemu irisannya
+}
+
+enum StatusLocation {
+    ONSITE
+    REMOTE
 }
 
 enum StatusNotification {
@@ -104,6 +110,7 @@ model Event {
     priority      PriorityStatus @default(LOW)
     timezone      TimeZone       @default(UTC)
     slug          String         @unique
+    location      StatusLocation @default(ONSITE)
 
     availableTimes DateTime[]
     matchedTimes   DateTime[]
