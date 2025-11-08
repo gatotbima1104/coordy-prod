@@ -2,7 +2,7 @@
 
 import { NextFunction, Request, Response } from "express";
 import { prisma } from "../configs/config";
-import { sendPushNotification } from "../utils/notification.helper";
+import { sendPushNotification, sendSilentNotification } from "../utils/notification.helper";
 import { findEventByShortSlug, findParticipantByShortSlug } from "../utils/link.helper";
 
 
@@ -102,6 +102,9 @@ export class VoteController {
           "Participant responded",
           `${participantExist.name} has submitted their availability.`
         ).catch(console.error);
+
+        // Send silent notification to update app data
+        sendSilentNotification(device.token).catch(console.error);
       }
     }
 
