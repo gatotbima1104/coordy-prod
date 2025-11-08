@@ -1,5 +1,24 @@
-import { apnClient } from "../configs/apn.config";
+import { getApnClient } from "../configs/apn.config";
 import { Notification, Errors, PushType } from "apns2";
+
+const apnClient = getApnClient();
+
+if (!(global as any).__APN_EVENTS__) {
+  apnClient.on(Errors.error, (err) => {
+    console.error("❌ APNs client error:", err.reason, err.notification?.deviceToken);
+  });
+
+  apnClient.on(Errors.badDeviceToken, (err) => {
+    console.warn("⚠️ Invalid device token:", err.notification.deviceToken);
+  });
+
+  apnClient.on("timeout", () => {
+    console.warn("⚠️ APNs connection timeout — will retry automatically on next send");
+  });
+
+  (global as any).__APN_EVENTS__ = true;
+}
+
 
 apnClient.on(Errors.error, (err) => {
   console.error("❌ APNs client error:", err.reason, err.notification?.deviceToken);
