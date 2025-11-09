@@ -94,19 +94,34 @@ export class VoteController {
       include: { devices: true },
     });
 
-    if (owner?.devices?.length) {
-      for (const device of owner.devices) {
-        // Don't block transaction with network I/O
+    // if (owner?.devices?.length) {
+    //   for (const device of owner.devices) {
+    //     // Don't block transaction with network I/O
+    //     sendPushNotification(
+    //       device.token,
+    //       "Participant responded",
+    //       `${participantExist.name} has submitted their availability.`
+    //     ).catch(console.error);
+
+    //     // Send silent notification to update app data
+    //     sendSilentNotification(device.token).catch(console.error);
+    //   }
+    // }
+
+    // Prepare push notification promises
+    const pushPromises = owner.devices.map(device => 
+      Promise.all([
         sendPushNotification(
           device.token,
           "Participant responded",
           `${participantExist.name} has submitted their availability.`
-        ).catch(console.error);
+        ),
+        sendSilentNotification(device.token)
+      ])
+    );
 
-        // Send silent notification to update app data
-        sendSilentNotification(device.token).catch(console.error);
-      }
-    }
+    // Run them in background
+    Promise.allSettled(pushPromises).catch(console.error);
 
     // Create notification separately
     await prisma.notification.create({
