@@ -47,23 +47,33 @@ export class VoteController {
 
       // Prepare for transaction
       const transactionResult = await prisma.$transaction(async (tx) => {
+        
+        // Update participant status
         const updatedParticipant = await tx.participant.update({
           where: { id: participantExist.id },
           data: { selectedTimes, status: "SUBMITTED" },
         });
 
+        // Re-fetch event with participants
         const updatedEvent = await tx.event.findUnique({
           where: { id: eventExist.id },
           include: { participants: true },
         });
         if (!updatedEvent) throw new Error("Event not found after update");
 
+        // Calculate matched times that all submitted
+        const submittedParticipants = updatedEvent.participants.filter(
+          (p) => p.status === "SUBMITTED" || p.id === participantExist.id
+        );
+
         const availableTimes = updatedEvent.availableTimes.map((t) => new Date(t).toISOString());
+
         const matchedTimes = availableTimes.filter((avTime) =>
-          updatedEvent.participants.every((p) =>
+          submittedParticipants.every((p) =>
             (p.selectedTimes ?? []).map((t) => new Date(t).toISOString()).includes(avTime)
           )
         );
+
         const matchedDateObjs = matchedTimes.map((t) => new Date(t));
         const allSubmitted = updatedEvent.participants.every(
           (p) => p.status === "SUBMITTED" || p.id === participantExist.id
@@ -77,7 +87,6 @@ export class VoteController {
           data: eventStatusUpdate,
         });
 
-        // Just return IDs and minimal info — no external calls here
         return {
           updatedParticipant,
           updatedEventId: updatedEvent.id,
