@@ -1,64 +1,55 @@
-import { getApnClient } from "../configs/apn.config";
-import { Notification, Errors, PushType } from "apns2";
+// utils/notification.helper.ts
+import { Notification, PushType } from "apns2";
+import { createApnClient } from "../configs/apn.config";
 
-const apnClient = getApnClient();
+async function safeSend(notification: Notification, retries = 1) {
+  const client = createApnClient();
 
-if (!(global as any).__APN_EVENTS__) {
-  apnClient.on(Errors.error, (err) => {
-    console.error("❌ APNs client error:", err.reason, err.notification?.deviceToken);
-  });
-
-  apnClient.on(Errors.badDeviceToken, (err) => {
-    console.warn("⚠️ Invalid device token:", err.notification.deviceToken);
-  });
-
-  apnClient.on("timeout", () => {
-    console.warn("⚠️ APNs connection timeout — will retry automatically on next send");
-  });
-
-  (global as any).__APN_EVENTS__ = true;
+  try {
+    await client.send(notification);
+  } catch (err: any) {
+    if (
+      retries > 0 &&
+      (err.code === "UND_ERR_SOCKET" || err.message?.includes("socket"))
+    ) {
+      console.warn("🔁 Retrying APNs after socket close...");
+      await safeSend(notification, retries - 1);
+    } else {
+      throw err;
+    }
+  } finally {
+    try {
+      client.close();
+    } catch (_) {}
+  }
 }
-
-
-apnClient.on(Errors.error, (err) => {
-  console.error("❌ APNs client error:", err.reason, err.notification?.deviceToken);
-});
-
-apnClient.on(Errors.badDeviceToken, (err) => {
-  console.warn("⚠️ Invalid device token:", err.notification.deviceToken);
-});
 
 export async function sendPushNotification(
   deviceToken: string,
   title: string,
   body: string,
-  sound: string = "default"
+  sound = "default"
 ) {
-  try {
-    const notification = new Notification(deviceToken, {
-      alert: { title, body },
-      sound,
-    });
+  const notification = new Notification(deviceToken, {
+    aps: { alert: { title, body }, sound },
+  });
 
-    await apnClient.send(notification);
-    console.log("✅ Sent APNs to", deviceToken);
+  try {
+    await safeSend(notification);
+    console.log("✅ Sent visible APNs to", deviceToken);
   } catch (error) {
     console.error("❌ Failed to send APNs:", error);
   }
 }
 
-// Send silent notification for background updates
-export async function sendSilentNotification( deviceToken: string ) {
-  try {
-    const notification = new Notification(deviceToken, {
-      aps: {
-        "content-available": 1,
-      },
-      priority: 5,
-      type: PushType.background
-    });
+export async function sendSilentNotification(deviceToken: string) {
+  const notification = new Notification(deviceToken, {
+    aps: { "content-available": 1 },
+    type: PushType.background,
+  });
 
-    await apnClient.send(notification);
+  try {
+    await safeSend(notification);
     console.log("✅ Sent silent APNs to", deviceToken);
   } catch (error) {
     console.error("❌ Failed to send silent APNs:", error);
