@@ -41,6 +41,7 @@ export async function sendPushNotification(
     });
 
     await apnClient.send(notification);
+    console.log("✅ Sent APNs to", deviceToken);
   } catch (error) {
     console.error("❌ Failed to send APNs:", error);
   }
