@@ -116,7 +116,6 @@ model Event {
     matchedTimes   DateTime[]
     selectedTime   DateTime?
 
-    isExpired      Boolean @default(false)
     expiredAt      DateTime?
 
     participants  Participant[]
