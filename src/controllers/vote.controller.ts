@@ -28,6 +28,22 @@ export class VoteController {
         include: { participants: true },
       });
 
+      if (eventExist.isExpired) {
+        throw new Error("This event has expired. Voting is no longer allowed.");
+      }
+
+      if (eventExist.expiredAt && new Date() > new Date(eventExist.expiredAt)) {
+        await prisma.event.update({
+          where: { 
+            id: eventExist.id
+          },
+          data: { 
+            isExpired: true
+          },
+        });
+        throw new Error("This event has expired. Voting is no longer allowed.");
+      }
+
       if (!eventExist) {
         eventExist = await findEventByShortSlug(event as string);
         if (eventExist)

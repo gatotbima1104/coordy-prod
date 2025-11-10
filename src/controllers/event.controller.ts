@@ -42,7 +42,9 @@ export class EventController {
                     availableTimes,
                     slug: `temp-${Math.random().toString(36).substring(2, 8)}`,
                     user: { connect: { id: userId } },
-                    location
+                    location, 
+                    isExpired: false,
+                    expiredAt: new Date(Date.now() + 30 * 60 * 1000),
                 },
             });
 
@@ -241,6 +243,7 @@ export class EventController {
             availableTimes,
             participants,
             location,
+            isExpired,
 
             // from share extension
             participantSelectedTimes,
@@ -265,6 +268,7 @@ export class EventController {
             if (timezone) updatedData.timezone = timezone;
             if (availableTimes) updatedData.availableTimes = availableTimes;
             if (location) updatedData.location = location;
+            if (isExpired !== undefined) updatedData.isExpired = isExpired;
 
             const eventSlug = existEvent.slug || uuidToSlug(existEvent.id);
             let newParticipantAdded = false;
