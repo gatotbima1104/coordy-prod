@@ -9,17 +9,21 @@ import { findEventByShortSlug, findParticipantByShortSlug } from "../utils/link.
 export class VoteController {
   async voteEvent(req: Request, res: Response, next: NextFunction) {
     try {
-      const { selectedTimes } = req.body;
-      let { event, participant } = req.query;
-      
-      const parts = req.originalUrl.split("?")[0].split("/").filter(Boolean);
+      const { email, selectedTimes } = req.body;
+      let { e, i, event, participant } = req.query; // support ?e=fgd&i=bad and ?event=x&participant=y
 
-      // parse event and participant slugs
+      // Resolve URL parameters
+      event = event || e;
+      participant = participant || i;
+
+      // Also check path slugs (for /event/:slug/participant/:slug pattern)
+      const parts = req.originalUrl.split("?")[0].split("/").filter(Boolean);
       if (parts.length >= 2) {
-        event = parts[parts.length - 2];
-        participant = parts[parts.length - 1];
+        event = event ?? parts[parts.length - 2];
+        participant = participant ?? parts[parts.length - 1];
       }
 
+      // console.log("🔵 voteEvent resolved:", { event, participant, email, selectedTimes });
       if (!event || !participant) throw new Error("Missing event or participant identifiers");
       
       // Find event
@@ -60,7 +64,7 @@ export class VoteController {
         // Update participant status
         const updatedParticipant = await tx.participant.update({
           where: { id: participantExist.id },
-          data: { selectedTimes, status: "SUBMITTED" },
+          data: { selectedTimes, status: "SUBMITTED", email },
         });
 
         // Re-fetch event with participants
