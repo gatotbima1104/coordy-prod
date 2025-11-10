@@ -77,7 +77,7 @@ export class EventController {
 
                     if (existing) participantSlug += "x";
 
-                    const link = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
+                    const link = `${DOMAIN_NAME}?e=${eventSlug}&i=${participantSlug}`;
 
                     // Update slug dan link
                     return prisma.participant.update({
@@ -313,7 +313,7 @@ export class EventController {
                 });
                 if (existing) participantSlug += "x";
 
-                const link = `${DOMAIN_NAME}/${eventSlug}/${participantSlug}`;
+                const link = `${DOMAIN_NAME}?e=${eventSlug}&i=${participantSlug}`;
                 await prisma.participant.update({
                     where: { id: newParticipant.id },
                     data: { slug: participantSlug, link },
