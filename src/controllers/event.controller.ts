@@ -405,9 +405,30 @@ export class EventController {
             }
             
             if (!event) throw new Error(`Event with slug: ${slug} not found`);
+
+            // get all event that has been picked time
+            const allPickedEvents = await prisma.event.findMany({
+                where: {
+                    userId: event.userId,
+                    selectedTime: { not: null }
+                }, 
+                select: {
+                    selectedTime: true,
+                    userId: true
+                }
+            })
+
+            const pickedTimes = allPickedEvents.map(e => e.selectedTime).filter((t): t is Date => t !== null);
+            const curatedAvailableTimes = event.availableTimes.filter((t) => {
+                return !pickedTimes.some((picked) => new Date(picked).getTime() === new Date(t).getTime())
+            })
+
             res.status(200).send({
                 message: "success",
-                data: event
+                data: {
+                    ...event,
+                    availableTimes: curatedAvailableTimes
+                }
             })
             
         } catch (error) {
