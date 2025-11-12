@@ -44,7 +44,7 @@ export class App {
   // routes configuration
   private routes() {
     this.app.use("/", aasaRouter())
-    this.app.use("/api/signin", authRouter());
+    // this.app.use("/api/signin", authRouter());
     this.app.use("/api/event", eventRouter())
     this.app.use("/", voteRouter())
     this.app.use("/api/recommend", aiRouter())
