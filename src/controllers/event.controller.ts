@@ -5,6 +5,7 @@ import { DOMAIN_NAME, prisma } from "../configs/config";
 import { findEventByShortSlug, formatToSlug, shortEventSlug, shortParticipantSlug } from "../utils/link.helper";
 import { EventUpdate } from "../interfaces/event.interface";
 import { uuidToSlug } from "../utils/slug.helper";
+import { notifyUser } from "../utils/notification.helper";
 
 export class EventController {
     async createEvent(req: Request, res: Response, next: NextFunction) {
@@ -20,6 +21,7 @@ export class EventController {
             availableTimes,
             participants,
             location,
+            expiredAt
             } = req.body;
 
             const userId = req.user?.id;
@@ -43,7 +45,7 @@ export class EventController {
                     slug: `temp-${Math.random().toString(36).substring(2, 8)}`,
                     user: { connect: { id: userId } },
                     location, 
-                    expiredAt: new Date(Date.now() + 30 * 60 * 1000),
+                    expiredAt,
                 },
             });
 
@@ -242,6 +244,7 @@ export class EventController {
             availableTimes,
             participants,
             location,
+            expiredAt,
 
             // from share extension
             participantSelectedTimes,
@@ -266,6 +269,7 @@ export class EventController {
             if (timezone) updatedData.timezone = timezone;
             if (availableTimes) updatedData.availableTimes = availableTimes;
             if (location) updatedData.location = location;
+            if (expiredAt) updatedData.expiredAt = expiredAt;
 
             const eventSlug = existEvent.slug || uuidToSlug(existEvent.id);
             let newParticipantAdded = false;
@@ -400,11 +404,34 @@ export class EventController {
             const { slug } = req.params
             let event = await prisma.event.findUnique({ where: { slug }, include: { participants: true} });
 
-            if (!event) {
-                event = await findEventByShortSlug(slug);
-            }
-            
+            if (!event) { event = await findEventByShortSlug(slug) }
             if (!event) throw new Error(`Event with slug: ${slug} not found`);
+            if (["CANCELLED", "COMPLETED"].includes(event.status)) throw new Error(`Event has been expired`)
+
+            // CHECK EXPIRATION
+            const now = new Date();
+            if (event.expiredAt && now > event.expiredAt) {
+                const hasPending = event.participants.some(
+                    (p) => p.status === "PENDING"
+                )
+                if (hasPending) {
+                    await prisma.event.update({
+                    where: { id: event.id },
+                    data: { status: "CANCELLED" },
+                    });
+        
+                    // NOTIFICATION
+                    await notifyUser({
+                    event: event,
+                    type: "CANCELLED",
+                    });
+                }
+                // TODO: NOTIF PARTICIPANT EMAIL
+
+                return res.status(403).send({
+                    message: `Voting closed at ${event.expiredAt.toISOString()}`
+                });
+            }
 
             // get all event that has been picked time
             const allPickedEvents = await prisma.event.findMany({
