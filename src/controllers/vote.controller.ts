@@ -1,7 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import { prisma } from "../configs/config";
+import { prisma, SMTP_PASS, SMTP_USER } from "../configs/config";
 import { notifyUser } from "../utils/notification.helper";
 import { findEventByShortSlug, findParticipantByShortSlug } from "../utils/link.helper";
+import { formatEventDateTime } from "../utils/time.helper";
+import { sendEmail } from "../utils/nodemailer.helper";
 
 
 export class VoteController {
@@ -65,7 +67,32 @@ export class VoteController {
             type: "CANCELLED",
           });
 
-          // TODO: NOTIF PARTICIPANT EMAIL
+          const participantEmails = await prisma.participant.findMany({
+            where: {
+              eventId: eventExist.id,
+              NOT: {
+                email: null
+              }
+            },
+            select: {
+              email: true
+            }
+          })
+
+          // SEND EMAIL NOTIF
+          const { formattedDate, formattedTime } = formatEventDateTime(eventExist.date)
+          for (const p of participantEmails) {
+            await sendEmail(
+              SMTP_USER,
+              SMTP_PASS,
+              p.email as string,
+              eventExist.title as string,
+              formattedDate,
+              eventExist.location,
+              formattedTime,
+              "CANCELLED",
+            )
+          }
         }
         
         return res.status(403).send({

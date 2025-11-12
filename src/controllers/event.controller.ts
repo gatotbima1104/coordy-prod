@@ -1,11 +1,13 @@
 import { NextFunction, Request, Response} from "express";
 import { findEventByTitle } from "../utils/event.helper";
 import { Prisma } from "@prisma/client";
-import { DOMAIN_NAME, prisma } from "../configs/config";
+import { DOMAIN_NAME, prisma, SMTP_PASS, SMTP_USER } from "../configs/config";
 import { findEventByShortSlug, formatToSlug, shortEventSlug, shortParticipantSlug } from "../utils/link.helper";
 import { EventUpdate } from "../interfaces/event.interface";
 import { uuidToSlug } from "../utils/slug.helper";
 import { notifyUser } from "../utils/notification.helper";
+import { sendEmail } from "../utils/nodemailer.helper";
+import { formatEventDateTime } from "../utils/time.helper";
 
 export class EventController {
     async createEvent(req: Request, res: Response, next: NextFunction) {
@@ -416,15 +418,42 @@ export class EventController {
                 )
                 if (hasPending) {
                     await prisma.event.update({
-                    where: { id: event.id },
-                    data: { status: "CANCELLED" },
+                        where: { id: event.id },
+                        data: { status: "CANCELLED" },
                     });
         
                     // NOTIFICATION
                     await notifyUser({
-                    event: event,
-                    type: "CANCELLED",
+                        event: event,
+                        type: "CANCELLED",
                     });
+
+                    const participantEmails = await prisma.participant.findMany({
+                        where: {
+                            eventId: event.id,
+                            NOT: {
+                                email: null
+                            }
+                        },
+                        select: {
+                            email: true
+                        }
+                    })
+
+                    // SEND EMAIL NOTIF
+                    const { formattedDate, formattedTime } = formatEventDateTime(event.date)
+                    for (const p of participantEmails) {
+                        await sendEmail(
+                            SMTP_USER,
+                            SMTP_PASS,
+                            p.email as string,
+                            event.title as string,
+                            formattedDate,
+                            event.location,
+                            formattedTime,
+                            "CANCELLED",
+                        )
+                    }
                 }
                 // TODO: NOTIF PARTICIPANT EMAIL
 
@@ -484,6 +513,33 @@ export class EventController {
                     status: "COMPLETED"
                 }
             })
+
+            const participantEmails = await prisma.participant.findMany({
+                where: {
+                    eventId: event.id,
+                    NOT: {
+                        email: null
+                    }
+                },
+                select: {
+                    email: true
+                }
+            })
+
+            // SEND EMAIL
+            const { formattedDate, formattedTime } = formatEventDateTime(event.date)
+            for (const p of participantEmails) {
+                await sendEmail(
+                    SMTP_USER,
+                    SMTP_PASS,
+                    p.email as string,
+                    event.title as string,
+                    formattedDate,
+                    event.location,
+                    formattedTime,
+                    "COMPLETED",
+                )
+            }
 
             res.status(200).send({ 
                 message: "success", 

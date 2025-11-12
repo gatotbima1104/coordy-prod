@@ -22,3 +22,7 @@ export const APN_TEAM_ID = process.env.APN_TEAM_ID || "";
 export const APN_PRIVATE_KEY = process.env.APN_PRIVATE_KEY || "";
 export const APN_BUNDLE_ID = process.env.APN_BUNDLE_ID || "";
 export const APN_HOST = process.env.APN_HOST || "";
+
+// SMTP configuration
+export const SMTP_USER = process.env.SMTP_USER || ""
+export const SMTP_PASS = process.env.SMTP_PASS || ""
