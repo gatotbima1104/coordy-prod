@@ -273,7 +273,7 @@ export class EventController {
 
             const eventSlug = existEvent.slug || uuidToSlug(existEvent.id);
             let newParticipantAdded = false;
-            let participantUpdated = false; // track if we need to recompute matched times
+            let participantUpdated = false;
 
             // 🧩 Case 1: Full event participant updates
             if (participants && participants.length > 0) {
