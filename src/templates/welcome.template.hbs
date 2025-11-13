@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Event Scheduled</title>
+    <title>Welcome to Cordy</title>
     <style>
         .container {
             max-width: 600px;
@@ -14,7 +14,7 @@
         }
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         .button {
             background: #007bff;
@@ -23,17 +23,17 @@
             text-decoration: none;
             border-radius: 4px;
             display: inline-block;
-            margin-top: 10px;
+            margin-top: 20px;
         }
         .footer {
-            margin-top: 30px;
+            margin-top: 35px;
             font-size: 12px;
             color: #666;
             text-align: center;
         }
-        .details {
+        .content-box {
             background-color: #ffffff;
-            padding: 15px;
+            padding: 20px;
             border-radius: 6px;
             border: 1px solid #ddd;
         }
@@ -41,30 +41,33 @@
 </head>
 <body>
     <div class="container">
+        
         <div class="header">
-            <h2>🎉 Event Scheduled Successfully!</h2>
+            <h2>👋 Welcome to Cordy!</h2>
         </div>
 
         <p>Hi {{username}},</p>
-        
-        <p>Your event <strong>{{eventTitle}}</strong> has been successfully scheduled.</p>
-        
-        <div class="details">
-            <p><strong>📅 Date:</strong> {{eventDate}}</p>
-            <p><strong>🕒 Time:</strong> {{eventTime}}</p>
-            <p><strong>📍 Location:</strong> {{eventLocation}}</p>
+
+        <div class="content-box">
+            <p>
+                Thank you for joining <strong>Cordy</strong> — your new intelligent scheduling partner.
+            </p>
+            <p>
+                Cordy helps you coordinate events effortlessly with friends, family, teams, or clients. 
+                From choosing the best time, tracking responses, to sending reminders — everything 
+                is designed to make scheduling simpler and smarter.
+            </p>
         </div>
 
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="{{icalLink}}" class="button">
-                📆 Add to Calendar
-            </a>
+        <div style="text-align: center;">
+            <a href="{{ctaLink}}" class="button">Get Started</a>
         </div>
 
         <div class="footer">
-            <p>This is an automated message from {{appName}}.<br>
+            <p>This is an automated message from Cordy.<br>
             Need help? Contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.</p>
         </div>
+
     </div>
 </body>
 </html>

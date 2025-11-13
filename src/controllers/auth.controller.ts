@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import { APPLE_CLIENT_ID, JWT_SECRET_KEY, prisma } from "../configs/config";
-import appleSignIn from "apple-signin-auth";
+import { APPLE_CLIENT_ID, JWT_SECRET_KEY, prisma, SMTP_PASS, SMTP_USER } from "../configs/config";
 import { signToken } from "../utils/jwt.helper";
+import { sendEmail } from "../utils/nodemailer.helper";
+import appleSignIn from "apple-signin-auth";
 import crypto from "crypto";
 
 export class AuthContoller {
@@ -32,6 +33,14 @@ export class AuthContoller {
                         email
                     }
                 })
+
+                // SEND EMAIL IF IN THEIR FIRST LOGIN
+                await sendEmail(
+                    SMTP_USER,
+                    SMTP_PASS,
+                    user.email as string,
+                    "REGISTER",
+                )
             }
 
             if (device_token) {

@@ -4,16 +4,17 @@ import * as fs from "fs";
 import * as path from "path";
 import { SMTP_USER } from "../configs/config";
 
-type EmailActivity = "COMPLETED" | "CANCELLED";
+type EmailActivity = "COMPLETED" | "CANCELLED" | "REGISTER";
 
 export async function sendEmail(
   user: string,
   pass: string,
   to: string,
-  eventTitle: string,
-  eventDate: string,
-  eventLocation: string,
-  eventTime: string,
+  eventTitle?: string,
+  eventDate?: string,
+  eventLocation?: string,
+  eventTime?: string,
+  eventId?: string,
   activity?: EmailActivity,
 ) {
   if (activity == "COMPLETED") {
@@ -26,6 +27,7 @@ export async function sendEmail(
         eventDate, 
         eventTime, 
         eventLocation,
+        eventId,
         subject: `Event confirmed: ${eventTitle}`
     })
   } else if (activity == "CANCELLED") {
@@ -38,7 +40,16 @@ export async function sendEmail(
         eventDate, 
         eventTime, 
         eventLocation,
+        eventId,
         subject: `Event cancelled: ${eventTitle}`
+    })
+  } else if (activity == "REGISTER") {
+    await emailSetup({
+        template: "welcome.template.hbs",
+        user,
+        pass, 
+        to,
+        subject: `Welcome to Cordy`
     })
   }
 }
@@ -48,11 +59,12 @@ export type TEmailConfiguration = {
   user: string;
   pass: string;
   to: string;
-  eventTitle: string;
-  eventDate: string;
-  eventTime: string;
-  eventLocation: string;
-  subject: string
+  eventTitle?: string;
+  eventDate?: string;
+  eventTime?: string;
+  eventLocation?: string;
+  eventId?: string
+  subject?: string;
 };
 
 async function emailSetup(payload: TEmailConfiguration) {
@@ -72,6 +84,7 @@ async function emailSetup(payload: TEmailConfiguration) {
       expiry: 1,
       appName: "Cordy",
       supportEmail: SMTP_USER,
+      icalLink: `https://coordy-prod.vercel.app/api/calendar/${payload.eventId}.ics`,
     });
 
     const mailOptions = {

@@ -139,6 +139,7 @@ export const notificationRouter = () => {
    *         description: Internal server error
    */
   router.patch("/:id", verifyToken, notificationRouter.updateNotification);
+  router.get("/calendar/:id.ics", notificationRouter.addToCalendar)
 
   /**
    * @swagger

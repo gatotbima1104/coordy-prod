@@ -537,6 +537,7 @@ export class EventController {
                     formattedDate,
                     event.location,
                     formattedTime,
+                    event.id,
                     "COMPLETED",
                 )
             }
