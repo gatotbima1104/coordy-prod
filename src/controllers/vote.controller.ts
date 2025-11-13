@@ -140,7 +140,15 @@ export class VoteController {
         );
 
         const eventStatusUpdate: any = { matchedTimes: matchedDateObjs };
-        if (allSubmitted) eventStatusUpdate.status = "NEED_ACTION";
+
+        // Handle if all submitted and there is at least one matched time
+        if (allSubmitted && matchedDateObjs.length >= 1) {
+          eventStatusUpdate.status = "NEED_ACTION";
+        } else if (allSubmitted && matchedDateObjs.length === 0) {
+          eventStatusUpdate.status = "CANCELLED";
+        } else {
+          eventStatusUpdate.status = "WAITING_RESPONSE";
+        }
 
         await tx.event.update({
           where: { id: updatedEvent.id },
