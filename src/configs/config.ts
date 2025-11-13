@@ -28,5 +28,10 @@ export const SMTP_USER = process.env.SMTP_USER || ""
 export const SMTP_PASS = process.env.SMTP_PASS || ""
 
 // VPS
-export const APN_WORKER_URL = process.env.APN_WORKER_URL as string; 
-export const WORKER_SECRET = process.env.WORKER_SECRET as string;
+export const APN_WORKER_URL = process.env.APN_WORKER_URL || "" 
+export const WORKER_SECRET = process.env.WORKER_SECRET || ""
+
+// SUPABASE
+export const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || ""
+export const SUPABASE_URL = process.env.SUPABASE_URL || ""
+export const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET || ""
