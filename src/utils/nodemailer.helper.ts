@@ -1,8 +1,5 @@
-import * as nodemailer from "nodemailer";
-import * as handlebars from "handlebars";
-import * as fs from "fs";
-import * as path from "path";
-import { SMTP_USER } from "../configs/config";
+import { sendEmailThroughWorker } from "../utils/worker.helper"; // adjust path
+import { SMTP_USER, SMTP_PASS } from "../configs/config";
 
 type EmailActivity = "COMPLETED" | "CANCELLED" | "REGISTER";
 
@@ -17,101 +14,36 @@ export async function sendEmail(
   eventId?: string,
   activity?: EmailActivity,
 ) {
-  if (activity == "COMPLETED") {
-    await emailSetup({
-        template: "scheduled.template.hbs",
-        user,
-        pass, 
-        to, 
-        eventTitle,
-        eventDate, 
-        eventTime, 
-        eventLocation,
-        eventId,
-        subject: `Event confirmed: ${eventTitle}`
-    })
-  } else if (activity == "CANCELLED") {
-    await emailSetup({
-        template: "failed.template.hbs",
-        user,
-        pass, 
-        to, 
-        eventTitle,
-        eventDate, 
-        eventTime, 
-        eventLocation,
-        eventId,
-        subject: `Event cancelled: ${eventTitle}`
-    })
-  } else if (activity == "REGISTER") {
-    await emailSetup({
-        template: "welcome.template.hbs",
-        user,
-        pass, 
-        to,
-        subject: `Welcome to Cordy`
-    })
+  let template = "";
+  let subject = "";
+
+  if (activity === "COMPLETED") {
+    template = "scheduled.template.hbs";
+    subject = `Event confirmed: ${eventTitle}`;
+  } 
+  else if (activity === "CANCELLED") {
+    template = "failed.template.hbs";
+    subject = `Event cancelled: ${eventTitle}`;
+  } 
+  else if (activity === "REGISTER") {
+    template = "welcome.template.hbs";
+    subject = "Welcome to Cordy";
+  } 
+  else {
+    console.error("Unknown email activity:", activity);
+    return;
   }
-}
 
-export type TEmailConfiguration = {
-  template: string;
-  user: string;
-  pass: string;
-  to: string;
-  eventTitle?: string;
-  eventDate?: string;
-  eventTime?: string;
-  eventLocation?: string;
-  eventId?: string
-  subject?: string;
-};
-
-async function emailSetup(payload: TEmailConfiguration) {
-  try {
-    const template = fs.readFileSync(
-      path.join(process.cwd(), `src/templates/${payload.template}`),
-      "utf8"
-    );
-    const compiledTemplate = handlebars.compile(template);
-
-    const html = compiledTemplate({
-      username: payload.to,
-      eventTitle: payload.eventTitle,
-      eventDate: payload.eventDate,
-      eventTime: payload.eventTime,
-      eventLocation: payload.eventLocation,
-      expiry: 1,
-      appName: "Cordy",
-      supportEmail: SMTP_USER,
-      icalLink: `https://coordy-prod.vercel.app/api/calendar/${payload.eventId}.ics`,
-    });
-
-    const mailOptions = {
-      from: SMTP_USER,
-      to: payload.to,
-      subject: payload.subject,
-      html,
-    };
-
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      auth: {
-        user: payload.user,
-        pass: payload.pass,
-      },
-    });
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log(error);
-        throw new Error("Error sending mail");
-      } else {
-        console.log(`Email sent: ${info.response}`);
-        throw new Error("Check your email for Verify your account");
-      }
-    });
-  } catch (error) {
-    console.log(error);
-  }
+  await sendEmailThroughWorker({
+    to,
+    template,
+    subject,
+    user,
+    pass,
+    eventTitle,
+    eventDate,
+    eventTime,
+    eventLocation,
+    eventId,
+  });
 }

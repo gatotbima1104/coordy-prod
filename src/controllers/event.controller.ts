@@ -451,6 +451,7 @@ export class EventController {
                             formattedDate,
                             event.location,
                             formattedTime,
+                            undefined,
                             "CANCELLED",
                         )
                     }
