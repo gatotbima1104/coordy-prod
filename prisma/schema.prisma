@@ -72,7 +72,7 @@ enum TimeZone {
 
 model User {
     id              String  @id @default(uuid())
-    appleId         String  @unique
+    supabaseId      String  @unique
     email           String?
     events          Event[]
     devices         Device[]

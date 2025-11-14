@@ -7,147 +7,147 @@ import appleSignIn from "apple-signin-auth";
 import crypto from "crypto";
 
 export class AuthContoller {
-    async signInWithApple(req: Request, res: Response, next: NextFunction) {
-        try {
-            
-            const { id_token, device_token } = req.body;
-            if (!id_token) throw new Error("Missing Apple ID token")
-
-            const decoded = await appleSignIn.verifyIdToken(id_token, {
-                audience: APPLE_CLIENT_ID,
-                ignoreExpiration: false,
-            })
-
-            const appleId = decoded.sub
-            const email = decoded.email || ""
-
-            const hashedAppleId = crypto.createHash('sha256').update(appleId).digest('hex');
-
-            let user = await prisma.user.findUnique({
-                where: { appleId: hashedAppleId }
-            })
-
-            if (!user) {
-                user = await prisma.user.create({
-                    data: {
-                        appleId: hashedAppleId,
-                        email
-                    }
-                })
-
-                // SEND EMAIL IF IN THEIR FIRST LOGIN
-                await sendEmail(
-                    SMTP_USER,
-                    SMTP_PASS,
-                    user.email as string,
-                    "REGISTER",
-                )
-            }
-
-            if (device_token) {
-                const existingDevice = await prisma.device.findUnique({
-                    where: { token: device_token },
-                });
-
-                if (existingDevice) {
-                    // Update user link if needed
-                    if (existingDevice.userId !== user.id) {
-                    await prisma.device.update({
-                        where: { token: device_token },
-                        data: { userId: user.id },
-                    });
-                    }
-                } else {
-                    // Create new device entry
-                    await prisma.device.create({
-                    data: {
-                        token: device_token,
-                        userId: user.id,
-                    },
-                    });
-                }
-            }
-
-
-            const token = signToken({
-                id: user.id,
-                // appleId: user.appleId,
-                email: user.email
-            })
-
-            res.status(200).send({
-                success: true,
-                token,
-                user
-            })
-
-
-        } catch (error) {
-            next(error)
-        }
-    }
-
-    // async syncUser(req: Request, res: Response, next: NextFunction) {
+    // async signInWithApple(req: Request, res: Response, next: NextFunction) {
     //     try {
             
-    //         const authHeader = req.headers.authorization
-    //         if (!authHeader) throw new Error("Missing Authorization header");
+    //         const { id_token, device_token } = req.body;
+    //         if (!id_token) throw new Error("Missing Apple ID token")
 
-    //         const accessToken = authHeader.replace("Bearer ", "")
-    //         console.log(accessToken)
-    //         const payload = await verifySupabaseToken(accessToken)
-
-    //         const supabaseId = payload.sub as string
-    //         const email = req.body.email
-    //         const deviceToken = req.body.device_token
-
-    //         if (!email) throw new Error("Missing email");
-
-    //         const existingUser = await prisma.user.findUnique({
-    //             where: { supabaseId }
-    //         });
-
-    //         let user = await prisma.user.upsert({
-    //             where: { supabaseId },
-    //             update: { email },
-    //             create: {
-    //                 supabaseId,
-    //                 email
-    //             }
+    //         const decoded = await appleSignIn.verifyIdToken(id_token, {
+    //             audience: APPLE_CLIENT_ID,
+    //             ignoreExpiration: false,
     //         })
 
-    //         if (!existingUser) {
+    //         const appleId = decoded.sub
+    //         const email = decoded.email || ""
+
+    //         const hashedAppleId = crypto.createHash('sha256').update(appleId).digest('hex');
+
+    //         let user = await prisma.user.findUnique({
+    //             where: { appleId: hashedAppleId }
+    //         })
+
+    //         if (!user) {
+    //             user = await prisma.user.create({
+    //                 data: {
+    //                     appleId: hashedAppleId,
+    //                     email
+    //                 }
+    //             })
+
+    //             // SEND EMAIL IF IN THEIR FIRST LOGIN
     //             await sendEmail(
     //                 SMTP_USER,
     //                 SMTP_PASS,
-    //                 email,
-    //                 undefined,
-    //                 undefined,
-    //                 undefined,
-    //                 undefined,
-    //                 undefined,
-    //                 "REGISTER"
-    //             );
+    //                 user.email as string,
+    //                 "REGISTER",
+    //             )
     //         }
 
-    //         if (deviceToken) {
-    //             await prisma.device.upsert({
-    //                 where: { token: deviceToken },
-    //                 update: { userId: user.id },
-    //                 create: {
-    //                     token: deviceToken,
-    //                     userId: user.id
-    //                 }
+    //         if (device_token) {
+    //             const existingDevice = await prisma.device.findUnique({
+    //                 where: { token: device_token },
     //             });
+
+    //             if (existingDevice) {
+    //                 // Update user link if needed
+    //                 if (existingDevice.userId !== user.id) {
+    //                 await prisma.device.update({
+    //                     where: { token: device_token },
+    //                     data: { userId: user.id },
+    //                 });
+    //                 }
+    //             } else {
+    //                 // Create new device entry
+    //                 await prisma.device.create({
+    //                 data: {
+    //                     token: device_token,
+    //                     userId: user.id,
+    //                 },
+    //                 });
+    //             }
     //         }
 
-    //         res.status(200).json({
-    //             message: "success",
-    //             data: user
-    //         });
+
+    //         const token = signToken({
+    //             id: user.id,
+    //             // appleId: user.appleId,
+    //             email: user.email
+    //         })
+
+    //         res.status(200).send({
+    //             success: true,
+    //             token,
+    //             user
+    //         })
+
 
     //     } catch (error) {
     //         next(error)
     //     }
     // }
+
+    async syncUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            
+            const authHeader = req.headers.authorization
+            if (!authHeader) throw new Error("Missing Authorization header");
+
+            const accessToken = authHeader.replace("Bearer ", "")
+            console.log(accessToken)
+            const payload = await verifySupabaseToken(accessToken)
+
+            const supabaseId = payload.sub as string
+            const email = req.body.email
+            const deviceToken = req.body.device_token
+
+            if (!email) throw new Error("Missing email");
+
+            const existingUser = await prisma.user.findUnique({
+                where: { supabaseId }
+            });
+
+            let user = await prisma.user.upsert({
+                where: { supabaseId },
+                update: { email },
+                create: {
+                    supabaseId,
+                    email
+                }
+            })
+
+            if (!existingUser) {
+                await sendEmail(
+                    SMTP_USER,
+                    SMTP_PASS,
+                    email,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    "REGISTER"
+                );
+            }
+
+            if (deviceToken) {
+                await prisma.device.upsert({
+                    where: { token: deviceToken },
+                    update: { userId: user.id },
+                    create: {
+                        token: deviceToken,
+                        userId: user.id
+                    }
+                });
+            }
+
+            res.status(200).json({
+                message: "success",
+                data: user
+            });
+
+        } catch (error) {
+            next(error)
+        }
+    }
 }
