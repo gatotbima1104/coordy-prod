@@ -26,7 +26,7 @@ export async function sendEmailThroughWorker({
   eventLocation,
   eventId
 }: SendEmailWorkerParams) {
-  const url = `${process.env.WORKER_URL}/send-email`;
+  const url = `${process.env.APN_WORKER_URL}/send-email`;
 
   try {
     await axios.post(
