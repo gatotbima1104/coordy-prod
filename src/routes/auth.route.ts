@@ -82,8 +82,8 @@ export const authRouter = () => {
    *       500:
    *         description: Internal server error
    */
-  // router.post("/apple", authContoller.signInWithApple);
-  router.post("/sync-user", authContoller.syncUser);
+  router.post("/apple", authContoller.signInWithApple);
+  // router.post("/sync-user", authContoller.syncUser);
 
   return router;
 };
