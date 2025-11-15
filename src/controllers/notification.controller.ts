@@ -97,7 +97,7 @@ export class NotificationController{
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
             "CALSCALE:GREGORIAN",
-            "METHOD:PUBLISH",
+            "METHOD:REQUEST",
             "BEGIN:VEVENT",
             `UID:${event.id}`,
             `DTSTAMP:${formatUTC(new Date())}`,
