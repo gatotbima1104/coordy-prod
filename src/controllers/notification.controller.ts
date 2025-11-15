@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { prisma } from "../configs/config";
+import ical, { ICalCalendarMethod } from "ical-generator";
 
 export class NotificationController{
     async getNotifications(req: Request, res: Response, next: NextFunction) {
@@ -90,32 +91,51 @@ export class NotificationController{
             const start = new Date(event.date);
             const end = new Date(start.getTime() + 60 * 60 * 1000);
 
-            const formatUTC = (d: Date) =>
-            d.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+            const calendar = ical({
+                name: "Coordy Event",
+                timezone: "Asia/Jakarta",
+                method: ICalCalendarMethod.REQUEST
+            })
 
-            const ics = [
-            "BEGIN:VCALENDAR",
-            "VERSION:2.0",
-            "CALSCALE:GREGORIAN",
-            "METHOD:REQUEST",
-            "BEGIN:VEVENT",
-            `UID:${event.id}`,
-            `DTSTAMP:${formatUTC(new Date())}`,
-            `DTSTART:${formatUTC(start)}`,
-            `DTEND:${formatUTC(end)}`,
-            `SUMMARY:${event.title}`,
-            `DESCRIPTION:${event.notes || ""}`,
-            `LOCATION:${event.location || ""}`,
-            "END:VEVENT",
-            "END:VCALENDAR",
-            ].join("\r\n");
+            calendar.createEvent({
+                id: event.id,
+                start,
+                end,
+                summary: event.title ?? "",
+                description: event.notes ?? "",
+                location: event.location ?? "",
+                organizer: {
+                    name: "Cordy Scheduler",
+                    email: "contact.cordy@gmail.com"
+                }
+            })
+
+            // const formatUTC = (d: Date) =>
+            // d.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+
+            // const ics = [
+            // "BEGIN:VCALENDAR",
+            // "VERSION:2.0",
+            // "CALSCALE:GREGORIAN",
+            // "METHOD:REQUEST",
+            // "BEGIN:VEVENT",
+            // `UID:${event.id}`,
+            // `DTSTAMP:${formatUTC(new Date())}`,
+            // `DTSTART:${formatUTC(start)}`,
+            // `DTEND:${formatUTC(end)}`,
+            // `SUMMARY:${event.title}`,
+            // `DESCRIPTION:${event.notes || ""}`,
+            // `LOCATION:${event.location || ""}`,
+            // "END:VEVENT",
+            // "END:VCALENDAR",
+            // ].join("\r\n");
 
             res.setHeader("Content-Type", "text/calendar; charset=utf-8");
             res.setHeader(
             "Content-Disposition",
             `attachment; filename="event-${id}.ics"`
             );
-            res.status(200).send(ics);
+            res.status(200).send(calendar.toString());
 
         } catch (error) {
             next(error);
