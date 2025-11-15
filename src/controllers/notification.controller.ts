@@ -85,7 +85,7 @@ export class NotificationController{
     async addToCalendar(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.id;
-            const event = await prisma.event.findUnique({ where: { id } });
+            const event = await prisma.event.findUnique({ where: { id }, include: { user: true } });
             if (!event) throw new Error("Event not found");
 
             const start = new Date(event.date);
@@ -105,30 +105,10 @@ export class NotificationController{
                 description: event.notes ?? "",
                 location: event.location ?? "",
                 organizer: {
-                    name: "Cordy Scheduler",
-                    email: "contact.cordy@gmail.com"
+                    name: event.user.email ?? "",
+                    email: event.user.email ?? ""
                 }
             })
-
-            // const formatUTC = (d: Date) =>
-            // d.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
-
-            // const ics = [
-            // "BEGIN:VCALENDAR",
-            // "VERSION:2.0",
-            // "CALSCALE:GREGORIAN",
-            // "METHOD:REQUEST",
-            // "BEGIN:VEVENT",
-            // `UID:${event.id}`,
-            // `DTSTAMP:${formatUTC(new Date())}`,
-            // `DTSTART:${formatUTC(start)}`,
-            // `DTEND:${formatUTC(end)}`,
-            // `SUMMARY:${event.title}`,
-            // `DESCRIPTION:${event.notes || ""}`,
-            // `LOCATION:${event.location || ""}`,
-            // "END:VEVENT",
-            // "END:VCALENDAR",
-            // ].join("\r\n");
 
             res.setHeader("Content-Type", "text/calendar; charset=utf-8");
             res.setHeader(
