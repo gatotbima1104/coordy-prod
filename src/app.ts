@@ -57,7 +57,7 @@ export class App {
     if (isPreviewBot) {
       const title = "Respond to your Coordiy Event";
       const desc = "Tap to choose your available time instantly.";
-      const image = "https://coordy-prod.vercel.app/App_Clip_Preview.jpg";
+      const image = "https://res.cloudinary.com/diodr6lob/image/upload/v1763370717/App_Clip_Preview_v5nppg.jpg";
 
       return res.send(`
         <!DOCTYPE html>
