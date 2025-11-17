@@ -41,49 +41,49 @@ export class App {
     this.app.use(express.urlencoded({extended: true}));
   }
 
-  private sharePreviewHandler = (req: Request, res: Response) => {
-    const ua = (req.headers['user-agent'] || "").toLowerCase();
-    const isPreviewBot =
-      ua.includes("facebookexternalhit") ||
-      ua.includes("whatsapp") ||
-      ua.includes("twitterbot") ||
-      ua.includes("slackbot") ||
-      ua.includes("imessage") ||
-      ua.includes("fetch") || 
-      ua.includes("preview");
+  // private sharePreviewHandler = (req: Request, res: Response) => {
+  //   const ua = (req.headers['user-agent'] || "").toLowerCase();
+  //   const isPreviewBot =
+  //     ua.includes("facebookexternalhit") ||
+  //     ua.includes("whatsapp") ||
+  //     ua.includes("twitterbot") ||
+  //     ua.includes("slackbot") ||
+  //     ua.includes("imessage") ||
+  //     ua.includes("fetch") || 
+  //     ua.includes("preview");
 
-    const { e, i } = req.query;
+  //   const { e, i } = req.query;
 
-    if (isPreviewBot) {
-      const title = "Respond to your Coordiy Event";
-      const desc = "Tap to choose your available time instantly.";
-      const image = "https://res.cloudinary.com/diodr6lob/image/upload/v1763370717/App_Clip_Preview_v5nppg.jpg";
+  //   if (isPreviewBot) {
+  //     const title = "Respond to your Coordiy Event";
+  //     const desc = "Tap to choose your available time instantly.";
+  //     const image = "https://res.cloudinary.com/diodr6lob/image/upload/v1763370717/App_Clip_Preview_v5nppg.jpg";
 
-      return res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta property="og:title" content="${title}" />
-            <meta property="og:description" content="${desc}" />
-            <meta property="og:image" content="${image}" />
-            <meta property="og:type" content="website" />
-            <meta name="twitter:card" content="summary_large_image" />
-          </head>
-          <body></body>
-        </html>
-      `);
-    }
+  //     return res.send(`
+  //       <!DOCTYPE html>
+  //       <html>
+  //         <head>
+  //           <meta property="og:title" content="${title}" />
+  //           <meta property="og:description" content="${desc}" />
+  //           <meta property="og:image" content="${image}" />
+  //           <meta property="og:type" content="website" />
+  //           <meta name="twitter:card" content="summary_large_image" />
+  //         </head>
+  //         <body></body>
+  //       </html>
+  //     `);
+  //   }
 
-    const appClipUrl =
-      `https://appclip.apple.com/id?p=com.mario-panApp.Coordiy.Clip` +
-      (e && i ? `&e=${e}&i=${i}` : "");
+  //   const appClipUrl =
+  //     `https://appclip.apple.com/id?p=com.mario-panApp.Coordiy.Clip` +
+  //     (e && i ? `&e=${e}&i=${i}` : "");
 
-    return res.redirect(appClipUrl);
-  };
+  //   return res.redirect(appClipUrl);
+  // };
 
   // routes configuration
   private routes() {
-    this.app.use("/", this.sharePreviewHandler)
+    // this.app.use("/", this.sharePreviewHandler)
     this.app.use("/", aasaRouter())
     this.app.use("/api/signin", authRouter());
     this.app.use("/api/event", eventRouter())
