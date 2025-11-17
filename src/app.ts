@@ -41,8 +41,49 @@ export class App {
     this.app.use(express.urlencoded({extended: true}));
   }
 
+  private sharePreviewHandler = (req: Request, res: Response) => {
+    const ua = (req.headers['user-agent'] || "").toLowerCase();
+    const isPreviewBot =
+      ua.includes("facebookexternalhit") ||
+      ua.includes("whatsapp") ||
+      ua.includes("twitterbot") ||
+      ua.includes("slackbot") ||
+      ua.includes("imessage") ||
+      ua.includes("fetch") || 
+      ua.includes("preview");
+
+    const { e, i } = req.query;
+
+    if (isPreviewBot) {
+      const title = "Respond to your Coordiy Event";
+      const desc = "Tap to choose your available time instantly.";
+      const image = "https://coordiy.app/App_Clip_Preview.jpg";
+
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta property="og:title" content="${title}" />
+            <meta property="og:description" content="${desc}" />
+            <meta property="og:image" content="${image}" />
+            <meta property="og:type" content="website" />
+            <meta name="twitter:card" content="summary_large_image" />
+          </head>
+          <body></body>
+        </html>
+      `);
+    }
+
+    const appClipUrl =
+      `https://appclip.apple.com/id?p=com.mario-panApp.Coordiy.Clip` +
+      (e && i ? `&e=${e}&i=${i}` : "");
+
+    return res.redirect(appClipUrl);
+  };
+
   // routes configuration
   private routes() {
+    this.app.use("/", this.sharePreviewHandler)
     this.app.use("/", aasaRouter())
     this.app.use("/api/signin", authRouter());
     this.app.use("/api/event", eventRouter())
