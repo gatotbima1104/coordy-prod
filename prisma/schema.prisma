@@ -111,6 +111,7 @@ model Event {
     timezone      TimeZone       @default(UTC)
     slug          String         @unique
     location      StatusLocation @default(ONSITE)
+    locationDetail  String?
 
     availableTimes DateTime[]
     matchedTimes   DateTime[]

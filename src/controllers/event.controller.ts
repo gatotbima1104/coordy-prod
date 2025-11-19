@@ -23,7 +23,8 @@ export class EventController {
             availableTimes,
             participants,
             location,
-            expiredAt
+            expiredAt,
+            locationDetail
             } = req.body;
 
             const userId = req.user?.id;
@@ -48,6 +49,7 @@ export class EventController {
                     user: { connect: { id: userId } },
                     location, 
                     expiredAt,
+                    locationDetail
                 },
             });
 
@@ -247,6 +249,7 @@ export class EventController {
             participants,
             location,
             expiredAt,
+            locationDetail,
 
             // from share extension
             participantSelectedTimes,
@@ -272,6 +275,7 @@ export class EventController {
             if (availableTimes) updatedData.availableTimes = availableTimes;
             if (location) updatedData.location = location;
             if (expiredAt) updatedData.expiredAt = expiredAt;
+            if (locationDetail) updatedData.locationDetail = locationDetail;
 
             const eventSlug = existEvent.slug || uuidToSlug(existEvent.id);
             let newParticipantAdded = false;
