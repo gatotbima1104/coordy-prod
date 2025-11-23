@@ -79,7 +79,7 @@ export async function notifyUser(payload: IPayloadNotifyUser) {
     } else if (payload.type == "CANCELLED") {
       if (owner?.devices?.length) {
         for (const device of owner.devices) {
-          sendPushNotification(device.token, `Event automatically cancelled`, `${payload.event.title} has been automatically cancelled due to pending participants`).catch(console.error)
+          sendPushNotification(device.token, `Event automatically cancelled`, `${payload.event.title} has been automatically cancelled`).catch(console.error)
           sendSilentNotification(device.token).catch(console.error);
         }
       }
@@ -92,6 +92,24 @@ export async function notifyUser(payload: IPayloadNotifyUser) {
           user: { connect: { id: owner!.id } },
           event: { connect: { id: payload.event.id } },
           type: "UPDATE",
+        },
+      })
+    } else if (payload.type == "REMINDER") {
+      if (owner?.devices?.length) {
+        for (const device of owner.devices) {
+          sendPushNotification(device.token, `${payload.event.title} - Is Ready!`, `Your events awaits your response. Choose a time to saved`).catch(console.error)
+          sendSilentNotification(device.token).catch(console.error);
+        }
+      }
+
+      await prisma.notification.create({
+        data: {
+          title: "Event Is Ready",
+          message: `${payload.event.title} awaits your response. Choose a time to saved`,
+          status: "UNREAD",
+          user: { connect: { id: owner!.id } },
+          event: { connect: { id: payload.event.id } },
+          type: "REMINDER",
         },
       })
     }

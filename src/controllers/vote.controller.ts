@@ -101,6 +101,9 @@ export class VoteController {
         });
       }
 
+      let shouldNotifyNeedAction = false;
+      let needActionEventPayload: any = null;
+
       // Find participant
       const participantExist = findParticipantByShortSlug(eventExist, participant as string);
       if (!participantExist) throw new Error("Participant not found");
@@ -144,6 +147,11 @@ export class VoteController {
         // Handle if all submitted and there is at least one matched time
         if (allSubmitted && matchedDateObjs.length >= 1) {
           eventStatusUpdate.status = "NEED_ACTION";
+          shouldNotifyNeedAction = true;
+          needActionEventPayload = {
+            ...updatedEvent,
+            matchedTimes: matchedDateObjs,
+          };
         } else if (allSubmitted && matchedDateObjs.length === 0) {
           eventStatusUpdate.status = "CANCELLED";
         } else {
@@ -171,6 +179,14 @@ export class VoteController {
         isFirstSubmit,
         type: "RESPONSE",
       });
+
+      if (shouldNotifyNeedAction && needActionEventPayload) {
+        await notifyUser({
+          event: needActionEventPayload,
+          type: "REMINDER",
+        });
+      }
+
 
       res.status(200).send({
         message: "success",
