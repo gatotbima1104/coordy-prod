@@ -61,7 +61,7 @@ export async function notifyUser(payload: IPayloadNotifyUser) {
       const statusNotif = payload.isFirstSubmit ? "has submitted their availability." : "has updated their availability.";
       if (owner?.devices?.length) {
         for (const device of owner.devices) {
-          sendPushNotification(device.token, "Participant responded", `${payload.participant?.name} ${statusNotif}`).catch(console.error);
+          sendPushNotification(device.token, `${payload.participant?.name} Just Responded!`, `New availability shared for your event`).catch(console.error);
           sendSilentNotification(device.token).catch(console.error);
         }
       }
