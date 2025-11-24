@@ -15,3 +15,15 @@ export function formatEventDateTime(dateInput: Date | string) {
 
   return { formattedDate, formattedTime };
 }
+
+export function formatSimpleDate(dateString: any) {
+  const date = new Date(dateString);
+
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).replace(",", " -");
+}

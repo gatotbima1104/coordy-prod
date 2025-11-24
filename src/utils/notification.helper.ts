@@ -3,6 +3,7 @@
 import { prisma } from "../configs/config";
 import { Event, Participant } from "@prisma/client";
 import { sendToApnWorker } from "./worker.helper";
+import { formatSimpleDate } from "./time.helper";
 
 type TNotifyUserTypes = "RESPONSE" | "REMINDER" | "UPDATE" | "CANCELLED" | "NONMATCHING";
 interface IPayloadNotifyUser {
@@ -87,7 +88,7 @@ export async function notifyUser(payload: IPayloadNotifyUser) {
       await prisma.notification.create({
         data: {
           title: "Event cancelled",
-          message: `${payload.event.title} failed to schedule, Invitation is overdue at ${payload.event.expiredAt}`,
+          message: `${payload.event.title} failed to schedule, Invitation is overdue at ${formatSimpleDate(payload.event.expiredAt)}`,
           status: "UNREAD",
           user: { connect: { id: owner!.id } },
           event: { connect: { id: payload.event.id } },
