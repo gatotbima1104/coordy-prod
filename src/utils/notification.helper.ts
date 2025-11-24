@@ -4,7 +4,7 @@ import { prisma } from "../configs/config";
 import { Event, Participant } from "@prisma/client";
 import { sendToApnWorker } from "./worker.helper";
 
-type TNotifyUserTypes = "RESPONSE" | "REMINDER" | "UPDATE" | "CANCELLED";
+type TNotifyUserTypes = "RESPONSE" | "REMINDER" | "UPDATE" | "CANCELLED" | "NONMATCHING";
 interface IPayloadNotifyUser {
   event: Event;
   participant?: Participant;
@@ -69,7 +69,7 @@ export async function notifyUser(payload: IPayloadNotifyUser) {
       await prisma.notification.create({
         data: {
           title: "Participant responded",
-          message: `${payload.participant?.name} ${statusNotif} to ${payload.event.title}.`,
+          message: `${payload.participant?.name} have shared their availability for your ${payload.event.title}.`,
           status: "UNREAD",
           user: { connect: { id: owner!.id } },
           event: { connect: { id: payload.event.id } },
@@ -79,15 +79,15 @@ export async function notifyUser(payload: IPayloadNotifyUser) {
     } else if (payload.type == "CANCELLED") {
       if (owner?.devices?.length) {
         for (const device of owner.devices) {
-          sendPushNotification(device.token, `Event automatically cancelled`, `${payload.event.title} has been automatically cancelled`).catch(console.error)
+          sendPushNotification(device.token, `${payload.event.title} has been Cancelled!`, `Event has been overdue and automatically cancelled`).catch(console.error)
           sendSilentNotification(device.token).catch(console.error);
         }
       }
 
       await prisma.notification.create({
         data: {
-          title: "Event automatically cancelled",
-          message: `${payload.event.title} has been automatically cancelled due to pending participants`,
+          title: "Event cancelled",
+          message: `${payload.event.title} failed to schedule, Invitation is overdue at ${payload.event.expiredAt}`,
           status: "UNREAD",
           user: { connect: { id: owner!.id } },
           event: { connect: { id: payload.event.id } },
@@ -105,11 +105,29 @@ export async function notifyUser(payload: IPayloadNotifyUser) {
       await prisma.notification.create({
         data: {
           title: "Event Is Ready",
-          message: `${payload.event.title} awaits your response. Choose a time to saved`,
+          message: `${payload.event.title} is ready for your confirmation.`,
           status: "UNREAD",
           user: { connect: { id: owner!.id } },
           event: { connect: { id: payload.event.id } },
           type: "REMINDER",
+        },
+      })
+    } else if (payload.type == "NONMATCHING") {
+      if (owner?.devices?.length) {
+        for (const device of owner.devices) {
+          sendPushNotification(device.token, `No Matching Time!`, `Hey, we can't find the best time for ${payload.event.title}. Try schedule for another day`).catch(console.error)
+          sendSilentNotification(device.token).catch(console.error);
+        }
+      }
+
+      await prisma.notification.create({
+        data: {
+          title: "Event cancelled",
+          message: `Sadly there are no matching time for ${payload.event.title} across all participant`,
+          status: "UNREAD",
+          user: { connect: { id: owner!.id } },
+          event: { connect: { id: payload.event.id } },
+          type: "DELETE",
         },
       })
     }

@@ -103,6 +103,8 @@ export class VoteController {
 
       let shouldNotifyNeedAction = false;
       let needActionEventPayload: any = null;
+      let shouldNotifyNonMatching = false;
+      let nonMatchingEventPayload: any = null;
 
       // Find participant
       const participantExist = findParticipantByShortSlug(eventExist, participant as string);
@@ -154,6 +156,11 @@ export class VoteController {
           };
         } else if (allSubmitted && matchedDateObjs.length === 0) {
           eventStatusUpdate.status = "CANCELLED";
+          shouldNotifyNonMatching = true;
+          nonMatchingEventPayload = {
+            ...updatedEvent,
+            matchedTimes: matchedDateObjs,
+          };
         } else {
           eventStatusUpdate.status = "WAITING_RESPONSE";
         }
@@ -187,7 +194,13 @@ export class VoteController {
         });
       }
 
-
+      if (shouldNotifyNonMatching && nonMatchingEventPayload) {
+        await notifyUser({
+          event: nonMatchingEventPayload,
+          type: "NONMATCHING",
+        });
+      }
+      
       res.status(200).send({
         message: "success",
         data: transactionResult.updatedParticipant,
