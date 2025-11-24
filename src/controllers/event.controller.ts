@@ -412,7 +412,11 @@ export class EventController {
 
             if (!event) { event = await findEventByShortSlug(slug) }
             if (!event) throw new Error(`Event with slug: ${slug} not found`);
-            if (["CANCELLED", "COMPLETED"].includes(event.status)) throw new Error(`Event has been expired`)
+            if (["CANCELLED", "COMPLETED"].includes(event.status)){
+                return res.status(404).send({
+                    message: `Event has been expired`
+                });
+            }
 
             // CHECK EXPIRATION
             const now = new Date();
