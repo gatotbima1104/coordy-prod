@@ -27,7 +27,7 @@ export class VoteController {
       
       // Find event by slug
       let eventExist = await prisma.event.findUnique({
-        where: { slug: event as string },
+        where: { slug: event as string, isDeleted: false },
         include: { participants: true },
       });
 

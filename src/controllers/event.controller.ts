@@ -30,7 +30,7 @@ export class EventController {
             const userId = req.user?.id;
 
             const existEvent = await prisma.event.findFirst({
-                where: { title, userId },
+                where: { title, userId, isDeleted: false },
             });
 
             if (existEvent) throw new Error("Event already exists");
@@ -133,6 +133,7 @@ export class EventController {
 
             let filter: any = {
                 userId,
+                isDeleted: false,
                 ...dateFilter,
             };
         
@@ -191,7 +192,8 @@ export class EventController {
             const existEvent = await prisma.event.findUnique({
                 where: {
                     id,
-                    userId
+                    userId,
+                    isDeleted: false
                 },
                 include: {
                     participants: true
@@ -258,7 +260,7 @@ export class EventController {
             } = req.body;
 
             const existEvent = await prisma.event.findUnique({
-                where: { id, userId },
+                where: { id, userId, isDeleted: false },
                 include: { participants: true },
             });
 
@@ -408,7 +410,7 @@ export class EventController {
     async getEventBySlug(req: Request, res: Response, next: NextFunction) {
         try {
             const { slug } = req.params
-            let event = await prisma.event.findUnique({ where: { slug }, include: { participants: true} });
+            let event = await prisma.event.findUnique({ where: { slug, isDeleted: false }, include: { participants: true} });
 
             if (!event) { event = await findEventByShortSlug(slug) }
             if (!event) throw new Error(`Event with slug: ${slug} not found`);
@@ -511,7 +513,7 @@ export class EventController {
             if (!userId) throw new Error("Unauthorized");
 
             const event = await prisma.event.findUnique({
-                where: { id: eventId }
+                where: { id: eventId, isDeleted: false }
             })
             if (!event) throw new Error("Event not found");
 
