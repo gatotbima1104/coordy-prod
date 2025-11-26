@@ -1,5 +1,5 @@
 export function uuidToSlug(uuid: string): string {
-  const firstThree = uuid.replace(/-/g, "").slice(0, 3).toLowerCase();
+  const firstThree = uuid.replace(/-/g, "").slice(0, 6).toLowerCase();
   const map: Record<string, string> = {
     "0": "j",
     "1": "a",
