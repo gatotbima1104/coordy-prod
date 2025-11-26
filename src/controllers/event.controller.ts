@@ -193,7 +193,7 @@ export class EventController {
                 where: {
                     id,
                     userId,
-                    isDeleted: false
+                    // isDeleted: false
                 },
                 include: {
                     participants: true
