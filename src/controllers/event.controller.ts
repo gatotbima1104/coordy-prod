@@ -29,6 +29,20 @@ export class EventController {
 
             const userId = req.user?.id;
 
+            // Remove old event to prevent duplicate
+            const oldEvent = await prisma.event.findUnique({
+                where: {
+                    title, userId, isDeleted: true
+                }
+            })
+
+            if (oldEvent) {
+                await prisma.event.delete({
+                    where: { title, userId, isDeleted: true }
+                })
+            }
+
+            // create event
             const existEvent = await prisma.event.findFirst({
                 where: { title, userId, isDeleted: false },
             });

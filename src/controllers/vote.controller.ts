@@ -156,6 +156,7 @@ export class VoteController {
           };
         } else if (allSubmitted && matchedDateObjs.length === 0) {
           eventStatusUpdate.status = "CANCELLED";
+          eventStatusUpdate.isDeleted = true;
           shouldNotifyNonMatching = true;
           nonMatchingEventPayload = {
             ...updatedEvent,
