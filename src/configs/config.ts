@@ -30,6 +30,7 @@ export const SMTP_PASS = process.env.SMTP_PASS || ""
 // VPS
 export const APN_WORKER_URL = process.env.APN_WORKER_URL || "" 
 export const WORKER_SECRET = process.env.WORKER_SECRET || ""
+export const CRON_SECRET_KEY = process.env.CRON_SECRET_KEY || ""
 
 // SUPABASE
 export const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || ""

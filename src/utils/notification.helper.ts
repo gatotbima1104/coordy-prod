@@ -47,6 +47,20 @@ export async function sendSilentNotification(deviceToken: string) {
   }
 }
 
+export async function sendCronJonNotif(deviceToken: string) {
+  try {
+    await sendToApnWorker({
+      type: "silent",
+      tokens: [deviceToken],
+      payload: {}
+    });
+
+    console.log("✅ Sent silent APNs to", deviceToken);
+  } catch (error) {
+    console.error("❌ Failed to send silent APNs:", error);
+  }
+}
+
 export async function notifyUser(payload: IPayloadNotifyUser) {
   try {
 

@@ -1,4 +1,10 @@
 import express, { Application, Request, Response, NextFunction } from "express";
+import path from "path";
+import fs from "fs";
+import swaggerUiDist from "swagger-ui-dist";
+import cors from "cors";
+
+// Router
 import { PORT } from "./configs/config";
 import { authRouter } from "./routes/auth.route";
 import { eventRouter } from "./routes/event.route";
@@ -6,10 +12,7 @@ import { voteRouter } from "./routes/vote.route";
 import { aasaRouter } from "./routes/aasa.route";
 import { aiRouter } from "./routes/ai.route";
 import { notificationRouter } from "./routes/notification.route";
-import path from "path";
-import fs from "fs";
-import swaggerUiDist from "swagger-ui-dist";
-import cors from "cors";
+import { cronRouter } from "./routes/cron.route";
 // import swaggerUi from "swagger-ui-express";
 
 export class App {
@@ -90,6 +93,7 @@ export class App {
     this.app.use("/", voteRouter())
     this.app.use("/api/recommend", aiRouter())
     this.app.use("/api/notification", notificationRouter())
+    this.app.use("/api/cron", cronRouter())
   }
 
   // Deployment of Swagger UI
