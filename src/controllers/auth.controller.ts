@@ -116,7 +116,7 @@ export class AuthContoller {
                 }
             })
 
-            if (!existingUser) {
+            if (!existingUser && !email.contains("@privaterelay.appleid.com")) {
                 await sendEmail(
                     SMTP_USER,
                     SMTP_PASS,
