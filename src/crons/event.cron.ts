@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { CRON_SECRET_KEY, prisma } from "../configs/config";
-import { sendCronJonNotif } from "../utils/notification.helper";
+import { notifyUser } from "../utils/notification.helper";
 
 export class CronController {
     async cronEventExpiration(req: Request, res: Response, next: NextFunction) {
@@ -40,13 +40,12 @@ export class CronController {
                 }
             })
             
-            // Send silent notify
+            // Send notify
             for (const event of eventExpired) {
-                const devices = event.user.devices
-                devices.forEach( async (i) => {
-                    await sendCronJonNotif(
-                        i.token
-                    )
+                await notifyUser({
+                    event,
+                    type: "CRON",
+                    totalParticipant: event.participants.filter(e => e.status == "PENDING").length
                 })
             }
 

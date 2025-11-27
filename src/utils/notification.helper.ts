@@ -5,12 +5,13 @@ import { Event, Participant } from "@prisma/client";
 import { sendToApnWorker } from "./worker.helper";
 import { formatSimpleDate } from "./time.helper";
 
-type TNotifyUserTypes = "RESPONSE" | "REMINDER" | "UPDATE" | "CANCELLED" | "NONMATCHING";
+type TNotifyUserTypes = "RESPONSE" | "REMINDER" | "UPDATE" | "CANCELLED" | "NONMATCHING" | "CRON";
 interface IPayloadNotifyUser {
   event: Event;
   participant?: Participant;
   isFirstSubmit?: boolean;
   type: TNotifyUserTypes;
+  totalParticipant?: number
 }
 
 
@@ -34,20 +35,6 @@ export async function sendPushNotification(
 }
 
 export async function sendSilentNotification(deviceToken: string) {
-  try {
-    await sendToApnWorker({
-      type: "silent",
-      tokens: [deviceToken],
-      payload: {}
-    });
-
-    console.log("✅ Sent silent APNs to", deviceToken);
-  } catch (error) {
-    console.error("❌ Failed to send silent APNs:", error);
-  }
-}
-
-export async function sendCronJonNotif(deviceToken: string) {
   try {
     await sendToApnWorker({
       type: "silent",
@@ -143,6 +130,24 @@ export async function notifyUser(payload: IPayloadNotifyUser) {
           user: { connect: { id: owner!.id } },
           event: { connect: { id: payload.event.id } },
           type: "DELETE",
+        },
+      })
+    } else if (payload.type == "CRON") {
+      if (owner?.devices?.length) {
+        for (const device of owner.devices) {
+          sendPushNotification(device.token, `Invitation Overdue!`, `${payload.totalParticipant} participants can't make it. ${payload.event.title} not going to accept more response.`).catch(console.error)
+          sendSilentNotification(device.token).catch(console.error);
+        }
+      }
+
+      await prisma.notification.create({
+        data: {
+          title: "Event cancelled",
+          message: `${payload.event.title} failed to schedule, Invitation is overdue at ${formatSimpleDate(payload.event.expiredAt)}`,
+          status: "UNREAD",
+          user: { connect: { id: owner!.id } },
+          event: { connect: { id: payload.event.id } },
+          type: "UPDATE",
         },
       })
     }
