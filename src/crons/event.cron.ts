@@ -35,7 +35,8 @@ export class CronController {
                     status: "WAITING_RESPONSE"
                 },
                 data: {
-                    status: "CANCELLED"
+                    status: "CANCELLED",
+                    isDeleted: true
                 }
             })
             
