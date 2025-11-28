@@ -106,12 +106,14 @@ export class CronController {
             const archivedParticipants: Prisma.ArchivedParticipantCreateManyInput[] = []
             for (const event of oldEvents){
                 for (const p of event.participants) {
-                    archivedParticipants.push({
-                        participantId: p.id,
-                        eventId: event.id,
-                        name: p.name,
-                        email: p.email ?? null
-                    })
+                    if (p.email) {
+                        archivedParticipants.push({
+                            participantId: p.id,
+                            eventId: event.id,
+                            name: p.name,
+                            email: p.email
+                        })
+                    }
                 }
             }
 
