@@ -75,10 +75,10 @@ export class CronController {
             }
 
             const now = new Date()
-            const weeklyTimes = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            // const weeklyTimes = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
             const oldEvents = await prisma.event.findMany({
                 where: {
-                    date: { lt: weeklyTimes }
+                    date: { lt: now }
                 },
                 select: {
                     id: true,
@@ -98,7 +98,7 @@ export class CronController {
                 return res.status(200).send({
                     message: "nothing to delete",
                     total: 0,
-                    weekStamp: weeklyTimes.toISOString(),
+                    weekStamp: now.toISOString(),
                     timestamp: now.toISOString()
                 })
             }
@@ -132,7 +132,7 @@ export class CronController {
                 message: "success",
                 archived: archivedParticipants.length,
                 total: deletedEvents.count,
-                weekStamp: weeklyTimes.toISOString(),
+                weekStamp: now.toISOString(),
                 timestamp: now.toISOString()
             })
 
