@@ -156,7 +156,7 @@ export class EventController {
             }
 
             if (status) {
-                const validStatuses = ["WAITING_RESPONSE", "NEED_ACTION", "COMPLETED"];
+                const validStatuses = ["WAITING_RESPONSE", "NEED_ACTION", "COMPLETED", "CANCELLED"];
                 const normalized = String(status).toUpperCase();
                 if (!validStatuses.includes(normalized)) {
                     return res.status(400).json({ message: "Invalid status value." });
