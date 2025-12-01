@@ -84,7 +84,7 @@ export const authRouter = () => {
    */
   // router.post("/apple", authContoller.signInWithApple);
   router.post("/sync-user", authContoller.syncUser);
-  router.post("/account-delete", authContoller.deleteAccount);
+  router.delete("/account-delete", authContoller.deleteAccount);
 
   return router;
 };
