@@ -5,6 +5,7 @@ import { verifySupabaseToken } from "../utils/verifySupabase.helper";
 import { signToken } from "../utils/jwt.helper";
 import appleSignIn from "apple-signin-auth";
 import crypto from "crypto";
+import { supabaseClient } from "../configs/supabase.config";
 
 export class AuthContoller {
     // async signInWithApple(req: Request, res: Response, next: NextFunction) {
@@ -146,6 +147,28 @@ export class AuthContoller {
                 data: user
             });
 
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async deleteAccount(req: Request, res: Response, next: NextFunction) {
+        try {
+            const supabaseId = req.user?.supabaseId
+            const user = await prisma.user.findUnique({
+                where: { supabaseId: supabaseId }
+            })
+
+            if (!user) throw new Error("User not found");
+            // const supabaseId = user.supabaseId
+
+            await prisma.user.delete({where: {supabaseId: supabaseId}})
+            const {error} = await supabaseClient.auth.admin.deleteUser(supabaseId as string)
+            if (error) throw new Error(error.message)
+
+            res.status(200).send({
+                message: "Account deleted successfully"
+            })
         } catch (error) {
             next(error)
         }
