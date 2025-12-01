@@ -154,6 +154,8 @@ export class AuthContoller {
 
     async deleteAccount(req: Request, res: Response, next: NextFunction) {
         try {
+            // console.log("Delete account called")
+            // console.log(req.user)
             const supabaseId = req.user?.supabaseId
             const user = await prisma.user.findUnique({
                 where: { supabaseId: supabaseId }
