@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { AuthContoller } from "../controllers/auth.controller";
+import { verifyToken } from "../middlewares/auth.middleware";
 
 /**
  * @swagger
@@ -84,7 +85,7 @@ export const authRouter = () => {
    */
   // router.post("/apple", authContoller.signInWithApple);
   router.post("/sync-user", authContoller.syncUser);
-  router.delete("/account-delete", authContoller.deleteAccount);
+  router.delete("/account-delete", verifyToken, authContoller.deleteAccount);
 
   return router;
 };
